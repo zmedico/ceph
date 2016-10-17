@@ -67,6 +67,8 @@ class PGQueueable {
   utime_t start_time;
   entity_inst_t owner;
 
+  unsigned dmclock_reservation, dmclock_weight, dmclock_limit;
+
   struct RunVis : public boost::static_visitor<> {
     OSD *osd;
     PGRef &pg;
@@ -95,7 +97,10 @@ public:
     : qvariant(op), cost(op->get_req()->get_cost()),
       priority(op->get_req()->get_priority()),
       start_time(op->get_req()->get_recv_stamp()),
-      owner(op->get_req()->get_source_inst())
+      owner(op->get_req()->get_source_inst()),
+      dmclock_reservation(op->get_req()->get_dmclock_reservation()),
+      dmclock_weight(op->get_req()->get_dmclock_weight()),
+      dmclock_limit(op->get_req()->get_dmclock_limit())
   {}
   PGQueueable(
     const PGSnapTrim &op, int cost, unsigned priority, utime_t start_time,
@@ -131,6 +136,9 @@ public:
   int get_cost() const { return cost; }
   utime_t get_start_time() const { return start_time; }
   entity_inst_t get_owner() const { return owner; }
+  unsigned get_dmclock_reservation() const { return dmclock_reservation; }
+  unsigned get_dmclock_weight() const { return dmclock_weight; }
+  unsigned get_dmclock_limit() const { return dmclock_limit; }
   const QVariant& get_variant() const { return qvariant; }
 }; // class PGQueueable
 
