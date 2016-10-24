@@ -68,7 +68,7 @@ namespace ceph {
       "client_name:" << client.first.first.name <<
       "client_address:" << client.first.first.addr <<
       dendl;
-      dout(20) << "Client's dmclock variables r: " << client.first.second.reservation << " w: " << client.first.second.weight << dendl;
+      dout(20) << "Client's dmclock variables " << client.first.second << dendl;
       return dmc::ClientInfo(client.first.second.reservation, client.first.second.weight, client.first.second.limit);
       //return mclock_op_tags->client_op;
     case osd_op_type_t::osd_subop:
@@ -127,11 +127,17 @@ namespace ceph {
   mClockClientQueue::InnerClient
   mClockClientQueue::get_inner_client(const Client& cl,
 				      const Request& request) {
-    dmclock_variables var;
-    var.reservation = request.second.get_dmclock_reservation();
-    var.weight = request.second.get_dmclock_weight();
-    var.limit = request.second.get_dmclock_limit();
-    return InnerClient(std::make_pair(cl, var), get_osd_op_type(request));
+    dmclock_variables *temp_var;
+    auto var_pos = dmclockvar_map.find(cl);
+    if(var_pos == dmclockvar_map.end()) {
+      dmclock_varRef varref = std::make_shared<dmclock_variables>(request.second.get_dmclock_reservation(), 
+                                 request.second.get_dmclock_weight(), request.second.get_dmclock_limit());
+      dmclockvar_map[cl] = varref;
+      temp_var = &(*varref);
+    } else {
+      temp_var = &(*var_pos->second);
+    }
+    return InnerClient(std::make_pair(cl, *temp_var), get_osd_op_type(request));
   }
 
   // Formatted output of the queue

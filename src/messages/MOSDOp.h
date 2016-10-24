@@ -64,9 +64,9 @@ private:
 
   uint64_t features;
 
-  __u32 dmclock_reservation;
-  __u32 dmclock_weight;
-  __u32 dmclock_limit;
+  __u32 dmclock_reservation = 60;
+  __u32 dmclock_weight = 60;
+  __u32 dmclock_limit = 0;
 
   osd_reqid_t reqid; // reqid explicitly set by sender
 

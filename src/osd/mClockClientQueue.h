@@ -52,13 +52,20 @@ namespace ceph {
 
     struct dmclock_variables {
       double reservation, weight, limit;
-    
-      friend bool operator==(dmclock_variables var1, dmclock_variables var2) {
+      
+      dmclock_variables() {}
+      dmclock_variables(double res, double wt, double lim) {
+        reservation = res;
+        weight = wt;
+        limit = lim;
+      }
+
+      friend bool operator==(const dmclock_variables& var1, const dmclock_variables& var2) {
         if(var1.reservation == var2.reservation && var1.weight == var2.weight && var1.limit == var2.limit) return true;
         return false;
       }
 
-      friend bool operator<(dmclock_variables var1, dmclock_variables var2) {
+      friend bool operator<(const dmclock_variables& var1, const dmclock_variables& var2) {
         if(var1.reservation < var2.reservation && var1.weight < var2.weight && var1.limit < var2.limit) return true;
         return false;
       }
@@ -74,6 +81,9 @@ namespace ceph {
 
 
     };
+
+    using dmclock_varRef = std::shared_ptr<dmclock_variables>;
+    std::map<Client, dmclock_varRef> dmclockvar_map;
 
     using InnerClient = std::pair<std::pair<entity_inst_t, dmclock_variables>, osd_op_type_t>;
 
