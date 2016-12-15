@@ -187,12 +187,13 @@ def build_ceph_cluster(ctx, config):
             for var, val in cbranch.iteritems():
                 ceph_branch = '--{var}={val}'.format(var=var, val=val)
         
-        ceph_sha = ctx.config['sha1']
-        devcommit = '--dev-commit={sha}'.format(sha=ceph_sha)
+        # install ceph
+        dev_branch = ctx.config['branch']
+        branch = '--dev={branch}'.format(branch=dev_branch)
         if ceph_branch:
             option = ceph_branch
         else:
-            option = devcommit
+            option = branch
         all_nodes = get_all_nodes(ctx, config)
         mds_nodes = get_nodes_using_role(ctx, 'mds')
         mds_nodes = " ".join(mds_nodes)
