@@ -235,8 +235,9 @@ class C_handle_reap : public EventCallback {
  */
 
 AsyncMessenger::AsyncMessenger(CephContext *cct, entity_name_t name,
-                               string mname, uint64_t _nonce)
-  : SimplePolicyMessenger(cct, name,mname, _nonce),
+                               string mname, uint64_t _nonce,
+			       MessageFactory *factory)
+  : SimplePolicyMessenger(cct, name, mname, _nonce, factory),
     dispatch_queue(cct, this, mname),
     lock("AsyncMessenger::lock"),
     nonce(_nonce), need_addr(true), did_bind(false),

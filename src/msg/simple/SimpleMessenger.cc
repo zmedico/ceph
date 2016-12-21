@@ -39,8 +39,9 @@ static ostream& _prefix(std::ostream *_dout, SimpleMessenger *msgr) {
  */
 
 SimpleMessenger::SimpleMessenger(CephContext *cct, entity_name_t name,
-				 string mname, uint64_t _nonce)
-  : SimplePolicyMessenger(cct, name,mname, _nonce),
+				 string mname, uint64_t _nonce,
+				 MessageFactory *factory)
+  : SimplePolicyMessenger(cct, name,mname, _nonce, factory),
     accepter(this, _nonce),
     dispatch_queue(cct, this, mname),
     reaper_thread(this),

@@ -12,9 +12,10 @@ using namespace std;
 #include "include/types.h"
 
 #include "global/global_context.h"
-
 #include "Message.h"
+#include "MessageFactory.h"
 
+#if 0 /* XXXX remove me--need to capture new msg types */
 #include "messages/MPGStats.h"
 
 #include "messages/MGenericMessage.h"
@@ -181,6 +182,7 @@ using namespace std;
 
 #include "messages/MOSDPGUpdateLogMissing.h"
 #include "messages/MOSDPGUpdateLogMissingReply.h"
+#endif /* XXXX */
 
 #define DEBUGLVL  10    // debug level of output
 
@@ -312,6 +314,8 @@ Message *decode_message(CephContext *cct, int crcflags,
   }
 
   // make message
+
+#if 0 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {
@@ -765,6 +769,19 @@ Message *decode_message(CephContext *cct, int crcflags,
       ldout(cct, 0) << "can't decode unknown message type " << type << " MSG_AUTH=" << CEPH_MSG_AUTH << dendl;
       if (cct->_conf->ms_die_on_bad_msg)
 	ceph_abort();
+    }
+    return 0;
+  }
+#endif /* XXXX */
+
+  MessageFactory *factory = conn->get_messenger()->get_message_factory();
+  Message *m = factory->create(header.type);
+  if (m == nullptr) {
+    if (cct) {
+      ldout(cct, 0) << "can't decode unknown message type " << header.type
+          << " MSG_AUTH=" << CEPH_MSG_AUTH << dendl;
+      if (cct->_conf->ms_die_on_bad_msg)
+        ceph_abort();
     }
     return 0;
   }

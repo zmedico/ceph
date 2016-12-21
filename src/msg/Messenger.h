@@ -35,12 +35,13 @@ using namespace std;
 #define SOCKET_PRIORITY_MIN_DELAY 6
 
 class Timer;
-
+class MessageFactory;
 
 class Messenger {
 private:
   list<Dispatcher*> dispatchers;
   list <Dispatcher*> fast_dispatchers;
+  MessageFactory *const factory;
 
 protected:
   /// the "name" of the local daemon. eg client.99
@@ -135,8 +136,9 @@ public:
    * Messenger users should construct full implementations directly,
    * or use the create() function.
    */
-  Messenger(CephContext *cct_, entity_name_t w)
-    : my_inst(),
+  Messenger(CephContext *cct_, entity_name_t w, , MessageFactory *factory)
+    : factory(factory),
+      my_inst(),
       default_send_priority(CEPH_MSG_PRIO_DEFAULT), started(false),
       magic(0),
       socket_priority(-1),
@@ -160,13 +162,15 @@ public:
    * @param nonce nonce value to uniquely identify this instance on the current host
    * @param features bits for the local connection
    * @param cflags general set of flags to configure transport resources
+   * @param factory Message factory object
    */
   static Messenger *create(CephContext *cct,
                            const string &type,
                            entity_name_t name,
 			   string lname,
                            uint64_t nonce,
-			   uint64_t cflags);
+			   uint64_t cflags,
+			   MessageFactory *factory);
 
   /**
    * create a new messenger
@@ -209,6 +213,12 @@ public:
    * currently believes to be its own.
    */
   const entity_addr_t& get_myaddr() { return my_inst.addr; }
+
+  /**
+   * @return A pointer to MessageFactory passed at construction.
+   */
+  MessageFactory* get_message_factory() const { return factory; }
+
 protected:
   /**
    * set messenger's address

@@ -351,8 +351,9 @@ static ostream& _prefix(std::ostream *_dout, XioMessenger *msgr) {
 
 XioMessenger::XioMessenger(CephContext *cct, entity_name_t name,
 			   string mname, uint64_t _nonce,
-			   uint64_t cflags, DispatchStrategy *ds)
-  : SimplePolicyMessenger(cct, name, mname, _nonce),
+			   uint64_t cflags, MessageFactory *factory,
+			   DispatchStrategy *ds)
+  : SimplePolicyMessenger(cct, name, mname, _nonce, factory),
     XioInit(cct),
     nsessions(0),
     shutdown_called(false),

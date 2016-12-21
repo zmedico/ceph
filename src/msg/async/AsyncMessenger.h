@@ -83,7 +83,7 @@ public:
    * be a value that will be repeated if the daemon restarts.
    */
   AsyncMessenger(CephContext *cct, entity_name_t name,
-                 string mname, uint64_t _nonce);
+                 string mname, uint64_t _nonce, MessageFactory *factory);
 
   /**
    * Destroy the AsyncMessenger. Pretty simple since all the work is done
