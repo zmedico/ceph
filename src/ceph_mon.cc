@@ -27,6 +27,7 @@ using namespace std;
 #include "mon/Monitor.h"
 #include "mon/MonitorDBStore.h"
 #include "mon/MonClient.h"
+#include "mon/MessageFactory.h"
 
 #include "msg/Messenger.h"
 
@@ -651,9 +652,12 @@ int main(int argc, const char **argv)
 
   // bind
   int rank = monmap.get_rank(g_conf->name.get_id());
+  MonMessageFactory *factory = new MonMessageFactory(g_ceph_context);
   Messenger *msgr = Messenger::create(g_ceph_context, g_conf->ms_type,
 				      entity_name_t::MON(rank), "mon",
-				      0, Messenger::HAS_MANY_CONNECTIONS);
+				      0, Messenger::HAS_MANY_CONNECTIONS,
+				      factory
+    );
   if (!msgr)
     exit(1);
   msgr->set_cluster_protocol(CEPH_MON_PROTOCOL);

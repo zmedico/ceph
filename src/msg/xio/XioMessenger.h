@@ -64,7 +64,7 @@ private:
 public:
   XioMessenger(CephContext *cct, entity_name_t name,
 	       string mname, uint64_t nonce,
-	       uint64_t cflags = 0,
+	       uint64_t cflags = 0, MessageFactory *factory,
 	       DispatchStrategy* ds = new QueueStrategy(1));
 
   virtual ~XioMessenger();

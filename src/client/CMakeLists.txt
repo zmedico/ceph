@@ -1,5 +1,6 @@
 set(libclient_srcs
   Client.cc
+  MessageFactory.cc
   Dentry.cc
   Inode.cc
   MetaRequest.cc

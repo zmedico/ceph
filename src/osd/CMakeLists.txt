@@ -5,6 +5,7 @@ set(osdc_osd_srcs
 set(osd_srcs
   OSD.cc
   Watch.cc
+  MessageFactory.cc
   ClassHandler.cc
   OpRequest.cc
   PG.cc

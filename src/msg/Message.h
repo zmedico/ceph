@@ -460,8 +460,13 @@ public:
   void encode(uint64_t features, int crcflags);
 };
 typedef boost::intrusive_ptr<Message> MessageRef;
-
 extern Message *decode_message(CephContext *cct, int crcflags,
+			       ceph_msg_header &header,
+			       ceph_msg_footer& footer, bufferlist& front,
+			       bufferlist& middle, bufferlist& data);
+
+extern Message *decode_message(Connection &conn,
+			       CephContext *cct, int crcflags,
 			       ceph_msg_header &header,
 			       ceph_msg_footer& footer, bufferlist& front,
 			       bufferlist& middle, bufferlist& data);

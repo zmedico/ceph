@@ -27,6 +27,7 @@ using namespace std;
 
 #include "mon/MonMap.h"
 #include "mds/MDSDaemon.h"
+#include "mds/MessageFactory.h"
 
 #include "msg/Messenger.h"
 
@@ -138,10 +139,11 @@ int main(int argc, const char **argv)
 
   uint64_t nonce = 0;
   get_random_bytes((char*)&nonce, sizeof(nonce));
-
+  MDSMessageFactory *factory = new MDSMessageFactory(g_ceph_context);
   Messenger *msgr = Messenger::create(g_ceph_context, g_conf->ms_type,
 				      entity_name_t::MDS(-1), "mds",
-				      nonce, Messenger::HAS_MANY_CONNECTIONS);
+				      nonce, Messenger::HAS_MANY_CONNECTIONS,
+				      factory);
   if (!msgr)
     exit(1);
   msgr->set_cluster_protocol(CEPH_MDS_PROTOCOL);

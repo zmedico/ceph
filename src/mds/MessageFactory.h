@@ -25,8 +25,8 @@ class MDSMessageFactory : public MessageFactory {
   CephContext *cct;
   MessageFactory *parent;
  public:
-  MDSMessageFactory(CephContext *cct, MessageFactory *parent)
-    : cct(cct), parent(parent) {}
+  MDSMessageFactory(CephContext *cct)
+    : cct(cct) {}
 
   Message* create(int type);
 };

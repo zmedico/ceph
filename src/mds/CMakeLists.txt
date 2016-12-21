@@ -1,5 +1,6 @@
 set(mds_srcs
   Capability.cc
+  MessageFactory.cc
   MDSDaemon.cc
   MDSRank.cc
   Beacon.cc

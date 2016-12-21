@@ -22,6 +22,7 @@
 using namespace std;
 
 #include "osd/OSD.h"
+#include "osd/MessageFactory.h"
 #include "os/ObjectStore.h"
 #include "mon/MonClient.h"
 #include "include/ceph_features.h"
@@ -439,29 +440,37 @@ int main(int argc, const char **argv)
 	 << " **          you specify neither or both.                             **"
 	 << TEXT_NORMAL << dendl;
   }
-
+  OsdMessageFactory *factory = new OsdMessageFactory(g_ceph_context);
   Messenger *ms_public = Messenger::create(g_ceph_context, g_conf->ms_type,
 					   entity_name_t::OSD(whoami), "client",
 					   getpid(),
 					   Messenger::HAS_HEAVY_TRAFFIC |
-					   Messenger::HAS_MANY_CONNECTIONS);
+					   Messenger::HAS_MANY_CONNECTIONS,
+					   factory);
+
   Messenger *ms_cluster = Messenger::create(g_ceph_context, g_conf->ms_type,
 					    entity_name_t::OSD(whoami), "cluster",
 					    getpid(),
 					    Messenger::HAS_HEAVY_TRAFFIC |
-					    Messenger::HAS_MANY_CONNECTIONS);
+					    Messenger::HAS_MANY_CONNECTIONS,
+					    factory);
   Messenger *ms_hbclient = Messenger::create(g_ceph_context, g_conf->ms_type,
 					     entity_name_t::OSD(whoami), "hbclient",
-					     getpid(), Messenger::HEARTBEAT);
+					     getpid(), Messenger::HEARTBEAT,
+					     factory);
   Messenger *ms_hb_back_server = Messenger::create(g_ceph_context, g_conf->ms_type,
 						   entity_name_t::OSD(whoami), "hb_back_server",
-						   getpid(), Messenger::HEARTBEAT);
+						   getpid(), Messenger::HEARTBEAT,
+						   factory);
+
   Messenger *ms_hb_front_server = Messenger::create(g_ceph_context, g_conf->ms_type,
 						    entity_name_t::OSD(whoami), "hb_front_server",
-						    getpid(), Messenger::HEARTBEAT);
+						    getpid(), Messenger::HEARTBEAT,
+						    factory);
   Messenger *ms_objecter = Messenger::create(g_ceph_context, g_conf->ms_type,
 					     entity_name_t::OSD(whoami), "ms_objecter",
-					     getpid(), 0);
+					     getpid(), 0,
+					     factory);
   if (!ms_public || !ms_cluster || !ms_hbclient || !ms_hb_back_server || !ms_hb_front_server || !ms_objecter)
     exit(1);
   ms_cluster->set_cluster_protocol(CEPH_OSD_PROTOCOL);

@@ -14,7 +14,7 @@ using namespace std;
 #include "global/global_context.h"
 #include "Message.h"
 #include "MessageFactory.h"
-
+#include "Messenger.h"
 #if 0 /* XXXX remove me--need to capture new msg types */
 #include "messages/MPGStats.h"
 
@@ -268,7 +268,16 @@ void Message::dump(Formatter *f) const
   f->dump_string("summary", ss.str());
 }
 
-Message *decode_message(CephContext *cct, int crcflags,
+Message *decode_message(
+			CephContext *cct, int crcflags,
+			ceph_msg_header& header,
+			ceph_msg_footer& footer,
+			bufferlist& front, bufferlist& middle,
+			bufferlist& data)
+{
+  return 0;
+}
+  Message *decode_message(Connection &conn,CephContext *cct, int crcflags,
 			ceph_msg_header& header,
 			ceph_msg_footer& footer,
 			bufferlist& front, bufferlist& middle,
@@ -774,7 +783,7 @@ Message *decode_message(CephContext *cct, int crcflags,
   }
 #endif /* XXXX */
 
-  MessageFactory *factory = conn->get_messenger()->get_message_factory();
+  MessageFactory *factory = conn.get_messenger()->get_message_factory();
   Message *m = factory->create(header.type);
   if (m == nullptr) {
     if (cct) {
@@ -794,7 +803,7 @@ Message *decode_message(CephContext *cct, int crcflags,
   if (m->get_header().version &&
       m->get_header().version < header.compat_version) {
     if (cct) {
-      ldout(cct, 0) << "will not decode message of type " << type
+      ldout(cct, 0) << "will not decode message of type " << header.type
 		    << " version " << header.version
 		    << " because compat_version " << header.compat_version
 		    << " > supported version " << m->get_header().version << dendl;
@@ -816,7 +825,7 @@ Message *decode_message(CephContext *cct, int crcflags,
   }
   catch (const buffer::error &e) {
     if (cct) {
-      lderr(cct) << "failed to decode message of type " << type
+      lderr(cct) << "failed to decode message of type " << header.type
 		 << " v" << header.version
 		 << ": " << e.what() << dendl;
       ldout(cct, cct->_conf->ms_dump_corrupt_message_level) << "dump: \n";

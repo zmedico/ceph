@@ -8,6 +8,7 @@ set(lib_mon_srcs
   ${CMAKE_SOURCE_DIR}/src/auth/AuthServiceHandler.cc
   ${osd_mon_files}
   Paxos.cc
+  MessageFactory.cc
   PaxosService.cc
   OSDMonitor.cc
   MDSMonitor.cc

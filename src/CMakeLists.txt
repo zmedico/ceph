@@ -586,6 +586,7 @@ if (WITH_MGR)
       mgr/DaemonState.cc
       mgr/DaemonServer.cc
       mgr/ClusterState.cc
+      mgr/MessageFactory.cc
       mgr/PyModules.cc
       mgr/PyFormatter.cc
       mgr/PyState.cc

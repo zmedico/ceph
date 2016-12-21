@@ -12,7 +12,7 @@
  */
 
 #include "DaemonServer.h"
-
+#include "mgr/MessageFactory.h"
 #include "messages/MMgrOpen.h"
 #include "messages/MMgrConfigure.h"
 #include "messages/MCommand.h"
@@ -46,8 +46,10 @@ DaemonServer::~DaemonServer() {
 int DaemonServer::init(uint64_t gid, entity_addr_t client_addr)
 {
   // Initialize Messenger
+  MgrMessageFactory *factory = new MgrMessageFactory(g_ceph_context);
   msgr = Messenger::create(g_ceph_context, g_conf->ms_type,
-			   entity_name_t::MGR(gid), "server", getpid(), 0);
+			   entity_name_t::MGR(gid), "server", getpid(), 0,
+			   factory);
   int r = msgr->bind(g_conf->public_addr);
   if (r < 0) {
     derr << "unable to bind mgr to " << g_conf->public_addr << dendl;
