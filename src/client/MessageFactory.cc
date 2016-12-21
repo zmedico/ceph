@@ -17,9 +17,14 @@ Message* ClientMessageFactory::create(int type)
   case CEPH_MSG_CLIENT_CAPS:            return new MClientCaps;
   case CEPH_MSG_CLIENT_LEASE:           return new MClientLease;
   case CEPH_MSG_CLIENT_REPLY:           return new MClientReply;
+  case CEPH_MSG_CLIENT_REQUEST:         return new MClientRequest;
   case CEPH_MSG_CLIENT_REQUEST_FORWARD: return new MClientRequestForward;
+  case CEPH_MSG_CLIENT_CAPRELEASE:      return new MClientCapRelease;
   case CEPH_MSG_CLIENT_SESSION:         return new MClientSession;
   case CEPH_MSG_MDS_MAP:                return new MMDSMap(cct);
+  case CEPH_MSG_CLIENT_QUOTA:           return  new MClientQuota;
+  case CEPH_MSG_CLIENT_RECONNECT:       return new MClientReconnect;
+  case CEPH_MSG_CLIENT_SNAP:            return new MClientSnap;
   default: return parent ? parent->create(type) : nullptr;
   }
 }
