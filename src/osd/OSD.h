@@ -1136,6 +1136,8 @@ public:
     return state == PREPARING_TO_STOP;
   }
   bool prepare_to_stop();
+  bool go_to_standby();
+  bool go_to_active();
   void got_stop_ack();
 
 
@@ -1321,7 +1323,8 @@ public:
     STATE_BOOTING,
     STATE_ACTIVE,
     STATE_STOPPING,
-    STATE_WAITING_FOR_HEALTHY
+    STATE_WAITING_FOR_HEALTHY,
+    STATE_STANDBY
   } osd_state_t;
 
   static const char *get_state_name(int s) {
@@ -1332,6 +1335,7 @@ public:
     case STATE_ACTIVE: return "active";
     case STATE_STOPPING: return "stopping";
     case STATE_WAITING_FOR_HEALTHY: return "waiting_for_healthy";
+    case STATE_STANDBY: return "standby";
     default: return "???";
     }
   }
@@ -1363,6 +1367,9 @@ public:
   }
   bool is_waiting_for_healthy() const {
     return state == STATE_WAITING_FOR_HEALTHY;
+  }
+  bool is_standby() const {
+    return state == STATE_STANDBY;
   }
 
 private:

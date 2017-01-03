@@ -1178,6 +1178,38 @@ bool OSDService::prepare_to_stop()
   return true;
 }
 
+bool OSDService::go_to_standby()
+{
+  if (!osd->is_active()) {
+    dout(0) << __func << " state is not active, can not go to standby" << dendl;
+    return false;
+  }
+
+  if (osdmap && osdmap->is_up(whoami)) {
+    monc->send_mon_message(new MOSDMarkMeDown(monc->get_fsid(),
+                                              osdmap->get_inst(whoami),
+                                              osdmap->get_epoch(),
+                                              true
+                                              ));
+  }
+
+  osd->set_state(STATE_STANDBY);
+
+  return true;
+}
+
+bool OSDService::go_to_active()
+{
+  if (!osd->is_standby()) {
+    dout(0) << __func << " state is not standby, can not go to active" << dendl;
+    return false;
+  }
+
+  osd->set_state(osd.STATE_ACTIVE);
+
+  return true;
+}
+
 void OSDService::got_stop_ack()
 {
   Mutex::Locker l(is_stopping_lock);
@@ -1937,6 +1969,22 @@ bool OSD::asok_command(string command, cmdmap_t& cmdmap, string format,
     f->close_section();
   } else if (command == "dump_objectstore_kv_stats") {
     store->get_db_statistics(f);
+  } else if (command == "standby") {
+    string flag;
+    size_t value = 0;
+    string error;
+    bool success = false;
+    if (!cmd_getval(cct, cmdmap, "flag", flag)) {
+      error = "unable to get flag";
+      success = false;
+    } else if (flag == "true") {
+      success = osd->service.go_to_standby();
+    } else if (flag == "false") {
+      success = osd->service.go_to_active();
+    } else {
+      error = "invalid flag provided";
+    }
+
   } else {
     assert(0 == "broken asok registration");
   }
@@ -2397,6 +2445,11 @@ void OSD::final_init()
 
   r = admin_socket->register_command("dump_objectstore_kv_stats", "dump_objectstore_kv_stats", asok_hook,
 					 "print statistics of kvdb which used by bluestore");
+  assert(r == 0);
+
+  r = admin_socket->register_command("standby", "standby " \
+                                     "name=flag,type=CephString", asok_hook,
+                                     "toggle OSD status between active and standby");
   assert(r == 0);
 
   test_ops_hook = new TestOpsSocketHook(&(this->service), this->store);
@@ -7095,7 +7148,7 @@ void OSD::_committed_osd_maps(epoch_t first, epoch_t last, MOSDMap *m)
       dout(0) << "map says i do not exist.  shutting down." << dendl;
       do_shutdown = true;   // don't call shutdown() while we have
 			    // everything paused
-    } else if (!osdmap->is_up(whoami) ||
+    } else if ((!osdmap->is_up(whoami) && !is_standby()) ||
 	       !osdmap->get_addr(whoami).probably_equals(
 		 client_messenger->get_myaddr()) ||
 	       !osdmap->get_cluster_addr(whoami).probably_equals(
