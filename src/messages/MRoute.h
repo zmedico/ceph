@@ -45,7 +45,7 @@ struct MRoute : public Message {
       dest(i),
       send_osdmap_first(0) {
     bufferlist::iterator p = bl.begin();
-    msg = decode_message(NULL, 0, p);
+    msg = decode_message(*connection, NULL, 0, p);
   }
 private:
   ~MRoute() {
@@ -62,9 +62,9 @@ public:
       bool m;
       ::decode(m, p);
       if (m)
-	msg = decode_message(NULL, 0, p);
+	msg = decode_message(*connection, NULL, 0, p);
     } else {
-      msg = decode_message(NULL, 0, p);
+      msg = decode_message(*connection, NULL, 0, p);
     }
     if (header.version >= 3) {
       ::decode(send_osdmap_first, p);

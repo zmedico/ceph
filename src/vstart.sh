@@ -501,6 +501,7 @@ if [ "$start_mon" -eq 1 ]; then
         num rgw = $CEPH_NUM_RGW
 
 [global]
+        ms_die_on_bad_msg = true
         fsid = $(uuidgen)
         osd pg bits = 3
         osd pgp bits = 5  ; (invalid, but ceph should cope!)

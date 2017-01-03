@@ -15,7 +15,7 @@ using namespace std;
 #include "Message.h"
 #include "MessageFactory.h"
 #include "Messenger.h"
-#if 0 /* XXXX remove me--need to capture new msg types */
+#if 1 /* XXXX remove me--need to capture new msg types */
 #include "messages/MPGStats.h"
 
 #include "messages/MGenericMessage.h"
@@ -268,15 +268,6 @@ void Message::dump(Formatter *f) const
   f->dump_string("summary", ss.str());
 }
 
-Message *decode_message(
-			CephContext *cct, int crcflags,
-			ceph_msg_header& header,
-			ceph_msg_footer& footer,
-			bufferlist& front, bufferlist& middle,
-			bufferlist& data)
-{
-  return 0;
-}
   Message *decode_message(Connection &conn,CephContext *cct, int crcflags,
 			ceph_msg_header& header,
 			ceph_msg_footer& footer,
@@ -324,7 +315,7 @@ Message *decode_message(
 
   // make message
 
-#if 0 /* XXXX remove me */
+#if 1 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {
@@ -783,8 +774,8 @@ Message *decode_message(
   }
 #endif /* XXXX */
 
-  MessageFactory *factory = conn.get_messenger()->get_message_factory();
-  Message *m = factory->create(header.type);
+//  MessageFactory *factory = conn.get_messenger()->get_message_factory();
+//  Message *m = factory->create(header.type);
   if (m == nullptr) {
     if (cct) {
       ldout(cct, 0) << "can't decode unknown message type " << header.type
@@ -876,7 +867,7 @@ void encode_message(Message *msg, uint64_t features, bufferlist& payload)
 // We've slipped in a 0 signature at this point, so any signature checking after this will
 // fail.  PLR
 
-Message *decode_message(CephContext *cct, int crcflags, bufferlist::iterator& p)
+Message *decode_message(Connection &conn, CephContext *cct, int crcflags, bufferlist::iterator& p)
 {
   ceph_msg_header h;
   ceph_msg_footer_old fo;
@@ -892,6 +883,6 @@ Message *decode_message(CephContext *cct, int crcflags, bufferlist::iterator& p)
   ::decode(fr, p);
   ::decode(mi, p);
   ::decode(da, p);
-  return decode_message(cct, crcflags, h, f, fr, mi, da);
+  return decode_message(conn, cct, crcflags, h, f, fr, mi, da);
 }
 
