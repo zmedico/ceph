@@ -13,27 +13,20 @@
  *
  */
 
-#ifndef MDS_MESSAGE_FACTORY_H
-#define MDS_MESSAGE_FACTORY_H
+#ifndef MON_MESSAGE_FACTORY_H
+#define MON_MESSAGE_FACTORY_H
 
 #include "msg/MessageFactory.h"
 
 class CephContext;
 
-class MDSMessageFactory : public MessageFactory {
+class OsdMessageFactory : public MessageFactory {
  private:
   CephContext *cct;
-  MessageFactory *parent;
  public:
-  MDSMessageFactory(CephContext *cct)
-    : cct(cct) {}
-
-// parent needed?
-//  MDSMessageFactory(CephContext *cct, MessageFactory *parent)
-//    : cct(cct), parent(parent) {}
-
+  OsdMessageFactory(CephContext *cct) : cct(cct) {}
 
   Message* create(int type);
 };
 
-#endif // MDS_MESSAGE_FACTORY_H
+#endif // MON_MESSAGE_FACTORY_H
