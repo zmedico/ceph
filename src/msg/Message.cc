@@ -783,7 +783,11 @@ Message *decode_message(
   }
 #endif /* XXXX */
 
+<<<<<<< HEAD
   MessageFactory *factory = conn.get_messenger()->get_message_factory();
+=======
+  MessageFactory *factory = conn->get_messenger()->get_message_factory();
+>>>>>>> 2a6d2289829ade8fc2769e61611dbd295c4376c5
   Message *m = factory->create(header.type);
   if (m == nullptr) {
     if (cct) {

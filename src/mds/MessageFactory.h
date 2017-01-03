@@ -28,6 +28,11 @@ class MDSMessageFactory : public MessageFactory {
   MDSMessageFactory(CephContext *cct)
     : cct(cct) {}
 
+// parent needed?
+//  MDSMessageFactory(CephContext *cct, MessageFactory *parent)
+//    : cct(cct), parent(parent) {}
+
+
   Message* create(int type);
 };
 
