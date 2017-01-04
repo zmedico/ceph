@@ -315,7 +315,7 @@ void Message::dump(Formatter *f) const
 
   // make message
 
-#if 1 /* XXXX remove me */
+#if 0 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {
@@ -774,11 +774,11 @@ void Message::dump(Formatter *f) const
   }
 #endif /* XXXX */
 
-//  MessageFactory *factory = conn.get_messenger()->get_message_factory();
-//  Message *m = factory->create(header.type);
+  MessageFactory *factory = conn.get_messenger()->get_message_factory();
+  Message *m = factory->create(header.type);
   if (m == nullptr) {
     if (cct) {
-      ldout(cct, 0) << "can't decode unknown message type " << header.type
+      ldout(cct, 0) << "can't decode an unknown message type " << header.type
           << " MSG_AUTH=" << CEPH_MSG_AUTH << dendl;
       if (cct->_conf->ms_die_on_bad_msg)
         ceph_abort();
@@ -812,6 +812,8 @@ void Message::dump(Formatter *f) const
   m->set_data(data);
 
   try {
+    ConnectionRef c(&conn);
+    m->set_connection(c);
     m->decode_payload();
   }
   catch (const buffer::error &e) {
