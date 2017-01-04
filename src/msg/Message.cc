@@ -315,7 +315,7 @@ void Message::dump(Formatter *f) const
 
   // make message
 
-#if 1 /* XXXX remove me */
+#if 0 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {
@@ -776,6 +776,8 @@ void Message::dump(Formatter *f) const
 
 //  MessageFactory *factory = conn.get_messenger()->get_message_factory();
 //  Message *m = factory->create(header.type);
+  MessageFactory *factory = conn.get_messenger()->get_message_factory();
+  Message *m = factory->create(header.type);
   if (m == nullptr) {
     if (cct) {
       ldout(cct, 0) << "can't decode unknown message type " << header.type
