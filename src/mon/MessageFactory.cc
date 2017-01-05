@@ -201,6 +201,21 @@ Message* MonMessageFactory::create(int type)
   case MSG_LOG:                       return new MLog;
   case MSG_LOGACK:                    return new MLogAck;
 
+  case CEPH_MSG_MON_SUBSCRIBE:
+    return new MMonSubscribe;
+
+  case MSG_PGSTATS:
+    return new MPGStats;
+
+  case MSG_OSD_BOOT:
+    return new MOSDBoot();
+
+  case MSG_OSD_ALIVE:
+    return new MOSDAlive();
+
+  case MSG_OSD_PGTEMP:
+    return new MOSDPGTemp;
+
     // MDS
   case MSG_MDS_HEARTBEAT:             return new MHeartbeat;
   case MSG_MDS_BEACON:                return new MMDSBeacon;

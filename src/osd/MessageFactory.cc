@@ -175,12 +175,172 @@
 Message* OsdMessageFactory::create(int type)
 {
   switch (type) {
+      case MSG_OSD_BOOT:
+    return new MOSDBoot();
+    
+  case MSG_OSD_ALIVE:
+    return new MOSDAlive();
+    
+  case MSG_OSD_PGTEMP:
+    return new MOSDPGTemp;
+    
+  case MSG_OSD_FAILURE:
+    return new MOSDFailure();
+    
+  case MSG_OSD_MARK_ME_DOWN:
+    return new MOSDMarkMeDown();
+    
+  case MSG_OSD_PING:
+    return new MOSDPing();
+    
+  case CEPH_MSG_OSD_OP:
+    return new MOSDOp();
+    
+  case CEPH_MSG_OSD_OPREPLY:
+    return new MOSDOpReply();
+    
+  case MSG_OSD_SUBOP:
+    return new MOSDSubOp();
+    
+  case MSG_OSD_SUBOPREPLY:
+    return new MOSDSubOpReply();
+    
+  case MSG_OSD_REPOP:
+    return new MOSDRepOp();
+    
+  case MSG_OSD_REPOPREPLY:
+    return new MOSDRepOpReply();
+    
+  case MSG_OSD_PG_UPDATE_LOG_MISSING:
+    return new MOSDPGUpdateLogMissing();
+    
+  case MSG_OSD_PG_UPDATE_LOG_MISSING_REPLY:
+    return new MOSDPGUpdateLogMissingReply();
+    
+
+  case CEPH_MSG_OSD_MAP:
+    return new MOSDMap;
+    
+
+  case CEPH_MSG_WATCH_NOTIFY:
+    return new MWatchNotify;
+    
+
+  case MSG_OSD_PG_NOTIFY:
+    return new MOSDPGNotify;
+    
+  case MSG_OSD_PG_QUERY:
+    return new MOSDPGQuery;
+    
+  case MSG_OSD_PG_LOG:
+    return new MOSDPGLog;
+    
+  case MSG_OSD_PG_REMOVE:
+    return new MOSDPGRemove;
+    
+  case MSG_OSD_PG_INFO:
+    return new MOSDPGInfo;
+    
+  case MSG_OSD_PG_CREATE:
+    return new MOSDPGCreate;
+    
+  case MSG_OSD_PG_TRIM:
+    return new MOSDPGTrim;
+    
+
+  case MSG_OSD_SCRUB:
+    return new MOSDScrub;
+    
+  case MSG_REMOVE_SNAPS:
+    return new MRemoveSnaps;
+    
+  case MSG_OSD_PG_MISSING:
+    return new MOSDPGMissing;
+    
+  case MSG_OSD_REP_SCRUB:
+    return new MOSDRepScrub;
+    
+  case MSG_OSD_PG_SCAN:
+    return new MOSDPGScan;
+    
+  case MSG_OSD_PG_BACKFILL:
+    return new MOSDPGBackfill;
+    
+  case MSG_OSD_PG_PUSH:
+    return new MOSDPGPush;
+    
+  case MSG_OSD_PG_PULL:
+    return new MOSDPGPull;
+    
+  case MSG_OSD_PG_PUSH_REPLY:
+    return new MOSDPGPushReply;
+    
+  case MSG_OSD_EC_WRITE:
+    return new MOSDECSubOpWrite;
+    
+  case MSG_OSD_EC_WRITE_REPLY:
+    return new MOSDECSubOpWriteReply;
+    
+  case MSG_OSD_EC_READ:
+    return new MOSDECSubOpRead;
+    
+  case MSG_OSD_EC_READ_REPLY:
+    return new MOSDECSubOpReadReply;
+    
+  case MSG_TIMECHECK:                 return new MTimeCheck();
+  case MSG_MON_HEALTH:                return new MMonHealth();
+  case MSG_ROUTE:                     return new MRoute;
+  case MSG_FORWARD:                   return new MForward;
+
+  case CEPH_MSG_AUTH:                 return new MAuth;
+  case CEPH_MSG_AUTH_REPLY:           return new MAuthReply;
+  case MSG_MON_GLOBAL_ID:             return new MMonGlobalID;
+  case MSG_PGSTATS:
+    return new MPGStats;
+
+  case MSG_PGSTATSACK:
+    return new MPGStatsAck;
+
+  case MSG_MON_COMMAND_ACK:
+    return new MMonCommandAck;
+
+  case MSG_MGR_BEACON:
+    return new MMgrBeacon();
+    
+
+  case MSG_MGR_MAP:
+    return new MMgrMap();
+    
+
+  case MSG_MGR_DIGEST:
+    return new MMgrDigest();
+    
+
+  case MSG_MGR_OPEN:
+    return new MMgrOpen();
+    
+
+  case MSG_MGR_REPORT:
+    return new MMgrReport();
+    
+
+  case MSG_MGR_CONFIGURE:
+    return new MMgrConfigure();
+    
+  case CEPH_MSG_MON_GET_VERSION_REPLY:
+    return new MMonGetVersionReply();
+
+  case CEPH_MSG_MON_MAP:              return new MMonMap;
+
+  case CEPH_MSG_MON_SUBSCRIBE:
+    return new MMonSubscribe;
+
+#if 0
   // MDS
   case MSG_MDS_HEARTBEAT:             return new MHeartbeat;
   case MSG_MDS_BEACON:                return new MMDSBeacon;
   case CEPH_MSG_MDS_MAP:              return new MMDSMap();
   case MSG_MON_COMMAND:               return new MMonCommand;
-  case CEPH_MSG_MON_MAP:              return new MMonMap;
   case CEPH_MSG_OSD_MAP:              return new MOSDMap;
   case MSG_MDS_SLAVE_REQUEST:         return new MMDSSlaveRequest;
   case CEPH_MSG_FS_MAP:               return new MFSMap;
@@ -217,6 +377,7 @@ Message* OsdMessageFactory::create(int type)
     /* case MSG_MDS_INODEUPDATE:           return new MInodeUpdate(); */
   case MSG_MDS_INODEFILECAPS:         return new MInodeFileCaps();
   case MSG_MDS_LOCK:                  return new MLock();
+#endif
   default: return nullptr;
   }
 }
