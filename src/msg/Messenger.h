@@ -28,7 +28,7 @@ using namespace std;
 #include "include/types.h"
 #include "include/ceph_features.h"
 #include "auth/Crypto.h"
-
+#include "MessageFactory.h"
 #include <errno.h>
 #include <sstream>
 

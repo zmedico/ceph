@@ -326,7 +326,7 @@ Message* OsdMessageFactory::create(int type)
 
   case MSG_MGR_CONFIGURE:
     return new MMgrConfigure();
-    
+
   case CEPH_MSG_MON_GET_VERSION_REPLY:
     return new MMonGetVersionReply();
 
