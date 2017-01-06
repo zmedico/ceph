@@ -12,12 +12,12 @@
 #include "msg/xio/XioMessenger.h"
 #endif
 
-Messenger *Messenger::create_client_messenger(CephContext *cct, string lname)
+Messenger *Messenger::create_client_messenger(CephContext *cct, string lname, MessageFactory *factory)
 {
   uint64_t nonce = 0;
   get_random_bytes((char*)&nonce, sizeof(nonce));
   return Messenger::create(cct, cct->_conf->ms_type, entity_name_t::CLIENT(),
-			   lname, nonce, 0, NULL);
+			   lname, nonce, 0, factory);
 }
 
 Messenger *Messenger::create(CephContext *cct, const string &type,

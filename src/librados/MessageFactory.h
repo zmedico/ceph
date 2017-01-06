@@ -15,17 +15,17 @@
 
 #ifndef CLIENT_MESSAGE_FACTORY_H
 #define CLIENT_MESSAGE_FACTORY_H
-
+#include "msg/Message.h"
 #include "msg/MessageFactory.h"
 
 class CephContext;
 
-class ClientMessageFactory : public MessageFactory {
+class LibradosMessageFactory : public MessageFactory {
  private:
   CephContext *cct;
   MessageFactory *parent;
  public:
-  ClientMessageFactory(CephContext *cct, MessageFactory *parent=nullptr)
+  LibradosMessageFactory(CephContext *cct, MessageFactory *parent=nullptr)
     : cct(cct), parent(parent) {}
 
   Message* create(int type);

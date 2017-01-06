@@ -29,4 +29,16 @@ class MonMessageFactory : public MessageFactory {
   Message* create(int type);
 };
 
+class Message;
+
+
+ class MonClientMessageFactory : public MessageFactory {
+ private:
+  CephContext *cct;
+ public:
+  MonClientMessageFactory(CephContext *cct) : cct(cct) {}
+
+   Message* create(int type);
+};
+
 #endif // MON_MESSAGE_FACTORY_H

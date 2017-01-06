@@ -1,4 +1,5 @@
 add_library(librados_objs OBJECT
+  MessageFactory.cc
   IoCtxImpl.cc
   RadosXattrIter.cc
   RadosClient.cc)

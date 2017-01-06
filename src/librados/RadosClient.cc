@@ -41,6 +41,8 @@
 #include "messages/MOSDMap.h"
 #include "messages/MCommandReply.h"
 
+#include "librados/MessageFactory.h"
+
 #include "AioCompletionImpl.h"
 #include "IoCtxImpl.h"
 #include "PoolAsyncCompletionImpl.h"
@@ -242,7 +244,7 @@ int librados::RadosClient::connect()
     goto out;
 
   err = -ENOMEM;
-  messenger = Messenger::create_client_messenger(cct, "radosclient");
+  messenger = Messenger::create_client_messenger(cct, "radosclient",new LibradosMessageFactory(g_ceph_context));
   if (!messenger)
     goto out;
 

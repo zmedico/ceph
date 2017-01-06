@@ -82,7 +82,7 @@ public:
       goto fail;
 
     //network connection
-    messenger = Messenger::create_client_messenger(cct, "client");
+    messenger = Messenger::create_client_messenger(cct, "client",new ClientMessageFactory(g_ceph_context));
 
     //at last the client
     ret = -CEPHFS_ERROR_NEW_CLIENT; //defined in libcephfs.h;

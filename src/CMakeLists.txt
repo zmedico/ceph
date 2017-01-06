@@ -429,6 +429,7 @@ set(libcommon_files
   log/Log.cc
   log/SubsystemMap.cc
   mon/MonCap.cc
+  mon/MessageFactory.cc
   mon/MonClient.cc
   mon/MonMap.cc
   mgr/MgrClient.cc

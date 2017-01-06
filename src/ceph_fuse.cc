@@ -26,6 +26,8 @@ using namespace std;
 
 #include "msg/Messenger.h"
 
+#include "client/MessageFactory.h"
+
 #include "mon/MonClient.h"
 
 #include "common/Timer.h"
@@ -203,7 +205,7 @@ int main(int argc, const char **argv, const char *envp[]) {
       goto out_mc_start_failed;
 
     // start up network
-    messenger = Messenger::create_client_messenger(g_ceph_context, "client");
+    messenger = Messenger::create_client_messenger(g_ceph_context, "client", new ClientMessageFactory(g_ceph_context));
     messenger->set_default_policy(Messenger::Policy::lossy_client(0, 0));
     messenger->set_policy(entity_name_t::TYPE_MDS,
 			  Messenger::Policy::lossless_client(0, 0));

@@ -185,7 +185,7 @@ public:
    * @param cct context
    * @param lname logical name of the messenger in this process (e.g., "client")
    */
-  static Messenger *create_client_messenger(CephContext *cct, string lname);
+  static Messenger *create_client_messenger(CephContext *cct, string lname, MessageFactory *factory);
 
   /**
    * @defgroup Accessors

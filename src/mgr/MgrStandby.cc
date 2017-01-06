@@ -27,6 +27,8 @@
 
 #include "MgrStandby.h"
 
+#include "MessageFactory.h"
+
 #define dout_context g_ceph_context
 #define dout_subsys ceph_subsys_mgr
 #undef dout_prefix
@@ -40,7 +42,7 @@ MgrStandby::MgrStandby() :
   timer(g_ceph_context, lock),
   active_mgr(nullptr)
 {
-  client_messenger = Messenger::create_client_messenger(g_ceph_context, "mgr");
+  client_messenger = Messenger::create_client_messenger(g_ceph_context, "mgr", new MgrMessageFactory(g_ceph_context));
   objecter = new Objecter(g_ceph_context, client_messenger, monc, NULL, 0, 0);
 }
 

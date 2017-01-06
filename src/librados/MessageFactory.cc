@@ -172,11 +172,15 @@
 #include "messages/MOSDPGUpdateLogMissingReply.h"
 
 
-Message* ClientMessageFactory::create(int type)
+Message* LibradosMessageFactory::create(int type)
 {
   switch (type) {
-  // MDS
+    // MDS
   case CEPH_MSG_AUTH_REPLY:           return new MAuthReply;
+  case MSG_MGR_MAP:                   return new MMgrMap();
+  case MSG_MON_COMMAND_ACK:           return new MMonCommandAck;
+  case CEPH_MSG_OSD_OPREPLY:          return new MOSDOpReply();
+
   case MSG_MDS_HEARTBEAT:             return new MHeartbeat;
   case MSG_MDS_BEACON:                return new MMDSBeacon;
   case CEPH_MSG_MDS_MAP:              return new MMDSMap();

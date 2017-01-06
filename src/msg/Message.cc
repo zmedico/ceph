@@ -171,6 +171,8 @@ using namespace std;
 
 #include "common/config.h"
 
+#include "common/BackTrace.h"
+
 #include "messages/MOSDPGPush.h"
 #include "messages/MOSDPGPushReply.h"
 #include "messages/MOSDPGPull.h"
@@ -787,6 +789,12 @@ void Message::dump(Formatter *f) const
     }
     return 0;
   }
+  } else {
+    BackTrace *bt = new BackTrace(1);
+    ostringstream oss;
+    bt->print(oss);
+    dout_emergency(oss.str());
+    ceph_abort();
   }
 #endif
   m->set_cct(cct);

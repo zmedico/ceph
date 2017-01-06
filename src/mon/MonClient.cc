@@ -27,9 +27,10 @@
 #include "messages/MMonSubscribeAck.h"
 #include "common/errno.h"
 #include "common/LogClient.h"
-
 #include "MonClient.h"
 #include "MonMap.h"
+#include "msg/Message.h"
+#include "MessageFactory.h"
 
 #include "auth/Auth.h"
 #include "auth/KeyRing.h"
@@ -39,7 +40,7 @@
 
 #define dout_subsys ceph_subsys_monc
 #undef dout_prefix
-#define dout_prefix *_dout << "monclient" << (hunting ? "(hunting)":"") << ": "
+#define dout_prefix *_dout << "monclient" << (hunting ? "(hunting)":"") << ":"
 
 MonClient::MonClient(CephContext *cct_) :
   Dispatcher(cct_),
@@ -108,7 +109,7 @@ int MonClient::get_monmap_privately()
   bool temp_msgr = false;
   Messenger* smessenger = NULL;
   if (!messenger) {
-    messenger = smessenger = Messenger::create_client_messenger(cct, "temp_mon_client");
+    messenger = smessenger = Messenger::create_client_messenger(cct, "temp_mon_client",new MonClientMessageFactory(g_ceph_context));
     if (NULL == messenger) {
         return -1;
     }
@@ -218,7 +219,7 @@ int MonClient::ping_monitor(const string &mon_id, string *result_reply)
 
   MonClientPinger *pinger = new MonClientPinger(cct, result_reply);
 
-  Messenger *smsgr = Messenger::create_client_messenger(cct, "temp_ping_client");
+  Messenger *smsgr = Messenger::create_client_messenger(cct, "temp_ping_client" , new MonClientMessageFactory(g_ceph_context));
   smsgr->add_dispatcher_head(pinger);
   smsgr->start();
 
