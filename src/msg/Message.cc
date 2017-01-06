@@ -317,7 +317,7 @@ void Message::dump(Formatter *f) const
 
   // make message
 
-#if 1 /* XXXX remove me */
+#if 0 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {
@@ -774,12 +774,14 @@ void Message::dump(Formatter *f) const
     }
     return 0;
   }
-// #else /* XXXX */
+#else /* XXXX */
+  Message *m = 0;
   MessageFactory *factory = conn.get_messenger()->get_message_factory();
-#endif
-#if 1
-  if (factory) {
+  if (factory)
     m = factory->create(header.type);
+  else
+    ceph_abort();
+#endif
   if (m == nullptr) {
     if (cct) {
       ldout(cct, 0) << "can't decode an unknown message type " << header.type
@@ -789,14 +791,7 @@ void Message::dump(Formatter *f) const
     }
     return 0;
   }
-  } else {
-    BackTrace *bt = new BackTrace(1);
-    ostringstream oss;
-    bt->print(oss);
-    dout_emergency(oss.str());
-    ceph_abort();
-  }
-#endif
+
   m->set_cct(cct);
 
   // m->header.version, if non-zero, should be populated with the

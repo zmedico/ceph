@@ -335,49 +335,6 @@ Message* OsdMessageFactory::create(int type)
   case CEPH_MSG_MON_SUBSCRIBE:
     return new MMonSubscribe;
 
-#if 0
-  // MDS
-  case MSG_MDS_HEARTBEAT:             return new MHeartbeat;
-  case MSG_MDS_BEACON:                return new MMDSBeacon;
-  case CEPH_MSG_MDS_MAP:              return new MMDSMap();
-  case MSG_MON_COMMAND:               return new MMonCommand;
-  case CEPH_MSG_OSD_MAP:              return new MOSDMap;
-  case MSG_MDS_SLAVE_REQUEST:         return new MMDSSlaveRequest;
-  case CEPH_MSG_FS_MAP:               return new MFSMap;
-  case CEPH_MSG_FS_MAP_USER:          return new MFSMapUser;
-  case MSG_MDS_OFFLOAD_TARGETS:       return new MMDSLoadTargets;
-  case MSG_MDS_RESOLVE:               return new MMDSResolve;
-  case MSG_MDS_RESOLVEACK:            return new MMDSResolveAck;
-  case MSG_MDS_CACHEREJOIN:           return new MMDSCacheRejoin;
-  case MSG_MDS_DIRUPDATE:             return new MDirUpdate();
-  case MSG_MDS_DISCOVER:              return new MDiscover();
-  case MSG_MDS_DISCOVERREPLY:         return new MDiscoverReply();
-  case MSG_MDS_FINDINO:               return new MMDSFindIno;
-  case MSG_MDS_FINDINOREPLY:          return new MMDSFindInoReply;
-  case MSG_MDS_OPENINO:               return new MMDSOpenIno;
-  case MSG_MDS_OPENINOREPLY:          return new MMDSOpenInoReply;
-  case MSG_MDS_FRAGMENTNOTIFY:        return new MMDSFragmentNotify;
-  case MSG_MDS_EXPORTDIRDISCOVER:     return new MExportDirDiscover();
-  case MSG_MDS_EXPORTDIRDISCOVERACK:  return new MExportDirDiscoverAck();
-  case MSG_MDS_EXPORTDIRCANCEL:       return new MExportDirCancel();
-  case MSG_MDS_EXPORTDIR:             return new MExportDir;
-  case MSG_MDS_EXPORTDIRACK:          return new MExportDirAck;
-  case MSG_MDS_EXPORTDIRFINISH:       return new MExportDirFinish;
-  case MSG_MDS_EXPORTDIRNOTIFY:       return new MExportDirNotify();
-  case MSG_MDS_EXPORTDIRNOTIFYACK:    return new MExportDirNotifyAck();
-  case MSG_MDS_EXPORTDIRPREP:         return new MExportDirPrep();
-  case MSG_MDS_EXPORTDIRPREPACK:      return new MExportDirPrepAck();
-  case MSG_MDS_EXPORTCAPS:            return new MExportCaps;
-  case MSG_MDS_EXPORTCAPSACK:         return new MExportCapsAck;
-  case MSG_MDS_GATHERCAPS:            return new MGatherCaps;
-  case MSG_MDS_DENTRYUNLINK:          return new MDentryUnlink;
-  case MSG_MDS_DENTRYLINK:            return new MDentryLink;
-  case MSG_MDS_CACHEEXPIRE:           return new MCacheExpire();
-  case MSG_MDS_TABLE_REQUEST:         return new MMDSTableRequest;
-    /* case MSG_MDS_INODEUPDATE:           return new MInodeUpdate(); */
-  case MSG_MDS_INODEFILECAPS:         return new MInodeFileCaps();
-  case MSG_MDS_LOCK:                  return new MLock();
-#endif
   default: return nullptr;
   }
 }
