@@ -207,7 +207,7 @@ namespace bi = boost::intrusive;
 
 // XioMessenger diagnostic "ping pong" flag (resend msg when send completes)
 #define MSG_MAGIC_REDUPE       0x0100
-
+class MessageFactory;
 class Message : public RefCountedObject {
 protected:
   ceph_msg_header  header;      // headerelope
@@ -228,6 +228,7 @@ protected:
   utime_t recv_complete_stamp;
 
   ConnectionRef connection;
+  MessageFactory *factory;
 
   uint32_t magic = 0;
 
@@ -299,6 +300,9 @@ public:
   const ConnectionRef& get_connection() const { return connection; }
   void set_connection(const ConnectionRef& c) {
     connection = c;
+  }
+  void set_factory(MessageFactory *f) {
+    factory = f;
   }
   CompletionHook* get_completion_hook() { return completion_hook; }
   void set_completion_hook(CompletionHook *hook) { completion_hook = hook; }
@@ -474,8 +478,14 @@ inline ostream& operator<<(ostream &out, const Message &m) {
 }
 
 extern void encode_message(Message *m, uint64_t features, bufferlist& bl);
-extern Message *decode_message(Connection &conn,
+extern Message *decode_message(MessageFactory *factory,
 			       CephContext *cct, int crcflags,
                                bufferlist::iterator& bl);
+
+extern Message *decode_message(MessageFactory *factory,
+			       CephContext *cct, int crcflags,
+			       ceph_msg_header &header,
+			       ceph_msg_footer& footer, bufferlist& front,
+			       bufferlist& middle, bufferlist& data);
 
 #endif

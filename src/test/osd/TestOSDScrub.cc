@@ -26,6 +26,7 @@
 #include "os/ObjectStore.h"
 #include "mon/MonClient.h"
 #include "common/ceph_argparse.h"
+#include "osd/MessageFactory.h"
 #include "msg/Messenger.h"
 
 class TestOSDScrub: public OSD {
@@ -55,9 +56,10 @@ TEST(TestOSDScrub, scrub_time_permit) {
              g_conf->osd_objectstore,
              g_conf->osd_data,
              g_conf->osd_journal);
+
   Messenger *ms = Messenger::create(g_ceph_context, g_conf->ms_type,
 				    entity_name_t::OSD(0), "make_checker",
-				    getpid(), 0);
+				    getpid(), 0, new OsdMessageFactory(g_ceph_context));
   ms->set_cluster_protocol(CEPH_OSD_PROTOCOL);
   ms->set_default_policy(Messenger::Policy::stateless_server(0, 0));
   ms->bind(g_conf->public_addr);

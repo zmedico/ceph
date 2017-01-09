@@ -270,7 +270,17 @@ void Message::dump(Formatter *f) const
   f->dump_string("summary", ss.str());
 }
 
-  Message *decode_message(Connection &conn,CephContext *cct, int crcflags,
+Message *decode_message(Connection &conn,CephContext *cct, int crcflags,
+			ceph_msg_header& header,
+			ceph_msg_footer& footer,
+			bufferlist& front, bufferlist& middle,
+			bufferlist& data)
+{
+  MessageFactory *factory = conn.get_messenger()->get_message_factory();
+  return decode_message(factory,cct,crcflags,header,footer,front,middle,data);
+}
+
+Message *decode_message(MessageFactory *factory,CephContext *cct, int crcflags,
 			ceph_msg_header& header,
 			ceph_msg_footer& footer,
 			bufferlist& front, bufferlist& middle,
@@ -776,7 +786,7 @@ void Message::dump(Formatter *f) const
   }
 #else /* XXXX */
   Message *m = 0;
-  MessageFactory *factory = conn.get_messenger()->get_message_factory();
+
   if (factory)
     m = factory->create(header.type);
   else
@@ -818,8 +828,7 @@ void Message::dump(Formatter *f) const
   m->set_data(data);
 
   try {
-    ConnectionRef c(&conn);
-    m->set_connection(c);
+    m->set_factory(factory);
     m->decode_payload();
   }
   catch (const buffer::error &e) {
@@ -875,7 +884,7 @@ void encode_message(Message *msg, uint64_t features, bufferlist& payload)
 // We've slipped in a 0 signature at this point, so any signature checking after this will
 // fail.  PLR
 
-Message *decode_message(Connection &conn, CephContext *cct, int crcflags, bufferlist::iterator& p)
+Message *decode_message(MessageFactory *factory, CephContext *cct, int crcflags, bufferlist::iterator& p)
 {
   ceph_msg_header h;
   ceph_msg_footer_old fo;
@@ -891,6 +900,5 @@ Message *decode_message(Connection &conn, CephContext *cct, int crcflags, buffer
   ::decode(fr, p);
   ::decode(mi, p);
   ::decode(da, p);
-  return decode_message(conn, cct, crcflags, h, f, fr, mi, da);
+  return decode_message(factory, cct, crcflags, h, f, fr, mi, da);
 }
-

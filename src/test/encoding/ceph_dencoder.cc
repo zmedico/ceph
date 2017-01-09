@@ -23,7 +23,7 @@
 #include "common/errno.h"
 #include "msg/Message.h"
 #include "include/assert.h"
-
+#include "osd/MessageFactory.h"
 #define TYPE(t)
 #define TYPE_STRAYDATA(t)
 #define TYPE_NONDETERMINISTIC(t)
@@ -228,7 +228,8 @@ public:
     bufferlist::iterator p = bl.begin();
     p.seek(seek);
     try {
-      Message *n = decode_message(g_ceph_context, 0, p);
+      OsdMessageFactory factory(g_ceph_context);
+      Message *n = decode_message(&factory, g_ceph_context, 0, p);
       if (!n)
 	throw std::runtime_error("failed to decode");
       if (n->get_type() != m_object->get_type()) {

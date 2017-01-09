@@ -3611,7 +3611,7 @@ void Monitor::resend_routed_requests()
       delete rr;
     } else {
       bufferlist::iterator q = rr->request_bl.begin();
-      PaxosServiceMessage *req = (PaxosServiceMessage *)decode_message(*rr->con, cct, 0, q);
+      PaxosServiceMessage *req = (PaxosServiceMessage *)decode_message(rr->con->get_messenger()->get_message_factory(), cct, 0, q);
       rr->op->mark_event("resend forwarded message to leader");
       dout(10) << " resend to mon." << mon << " tid " << rr->tid << " " << *req << dendl;
       MForward *forward = new MForward(rr->tid, req, rr->con_features,

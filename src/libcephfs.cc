@@ -17,6 +17,7 @@
 #include <string.h>
 #include <string>
 
+#include "client/MessageFactory.h"
 #include "auth/Crypto.h"
 #include "client/Client.h"
 #include "librados/RadosClient.h"

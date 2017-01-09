@@ -20,6 +20,7 @@
 #include <map>
 using namespace std;
 
+#include "MessageFactory.h"
 #include "Message.h"
 #include "Dispatcher.h"
 #include "common/Mutex.h"
