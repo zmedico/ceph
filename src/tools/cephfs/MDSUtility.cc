@@ -13,6 +13,7 @@
 
 #include "MDSUtility.h"
 #include "mon/MonClient.h"
+#include "mds/MessageFactory.h"
 
 #define dout_context g_ceph_context
 #define dout_subsys ceph_subsys_mds
@@ -27,7 +28,7 @@ MDSUtility::MDSUtility() :
   waiting_for_mds_map(NULL)
 {
   monc = new MonClient(g_ceph_context);
-  messenger = Messenger::create_client_messenger(g_ceph_context, "mds");
+  messenger = Messenger::create_client_messenger(g_ceph_context, "mds", new MDSMessageFactory(g_ceph_context));
   fsmap = new FSMap();
   objecter = new Objecter(g_ceph_context, messenger, monc, NULL, 0, 0);
 }
