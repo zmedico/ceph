@@ -29,7 +29,6 @@ using namespace std;
 #include "include/types.h"
 #include "include/ceph_features.h"
 #include "auth/Crypto.h"
-#include "MessageFactory.h"
 #include <errno.h>
 #include <sstream>
 
@@ -137,7 +136,7 @@ public:
    * Messenger users should construct full implementations directly,
    * or use the create() function.
    */
-  Messenger(CephContext *cct_, entity_name_t w , MessageFactory *factory)
+  Messenger(CephContext *cct_, entity_name_t w,MessageFactory *factory)
     : factory(factory),
       my_inst(),
       default_send_priority(CEPH_MSG_PRIO_DEFAULT), started(false),
