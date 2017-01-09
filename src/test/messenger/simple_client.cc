@@ -30,6 +30,7 @@ using namespace std;
 #include "common/address_helper.h"
 #include "message_helper.h"
 #include "simple_dispatcher.h"
+#include "mon/MessageFactory.h"
 
 #define dout_subsys ceph_subsys_simple_client
 
@@ -106,7 +107,9 @@ int main(int argc, const char **argv)
 	messenger = Messenger::create(g_ceph_context, g_conf->ms_type,
 				      entity_name_t::MON(-1),
 				      "client",
-				      getpid(), 0);
+				      getpid(), 0,
+				      new MonClientMessageFactory(g_ceph_context));
+	  );
 
 	// enable timing prints
 	messenger->set_magic(MSG_MAGIC_TRACE_CTR);

@@ -28,6 +28,7 @@ using namespace std;
 #include "perfglue/heap_profiler.h"
 #include "common/address_helper.h"
 #include "simple_dispatcher.h"
+#include "mon/MessageFactory.h"
 
 #define dout_subsys ceph_subsys_simple_server
 
@@ -78,7 +79,9 @@ int main(int argc, const char **argv)
 				      entity_name_t::MON(-1),
 				      "simple_server",
 				      0 /* nonce */,
-				      0 /* flags */);
+				      0 /* flags */,
+				      new MonClientMessageFactory(g_ceph_context));
+	  );
 	// enable timing prints
 	messenger->set_magic(MSG_MAGIC_TRACE_CTR);
 	messenger->set_default_policy(
