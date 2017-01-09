@@ -109,7 +109,6 @@ int main(int argc, const char **argv)
 				      "client",
 				      getpid(), 0,
 				      new MonClientMessageFactory(g_ceph_context));
-	  );
 
 	// enable timing prints
 	messenger->set_magic(MSG_MAGIC_TRACE_CTR);
