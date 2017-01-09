@@ -22,6 +22,7 @@ using namespace std;
 #include "common/config.h"
 #include "msg/msg_types.h"
 #include "msg/Messenger.h"
+#include "msg/MessageFactory.h"
 #include "messages/MPing.h"
 #include "common/Timer.h"
 #include "common/ceph_argparse.h"
@@ -103,10 +104,12 @@ int main(int argc, const char **argv)
 	  "initial msgs (pipe depth) " << n_msgs << " " <<
 	  "data buffer size " << n_dsize << std::endl;
 
+	SimpleMessageFactory factory;
 	messenger = Messenger::create(g_ceph_context, g_conf->ms_type,
 				      entity_name_t::MON(-1),
 				      "client",
-				      getpid(), 0);
+				      getpid(), 0,
+				      &factory);
 
 	// enable timing prints
 	messenger->set_magic(MSG_MAGIC_TRACE_CTR);

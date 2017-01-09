@@ -109,7 +109,7 @@ int MonClient::get_monmap_privately()
   bool temp_msgr = false;
   Messenger* smessenger = NULL;
   if (!messenger) {
-    messenger = smessenger = Messenger::create_client_messenger(cct, "temp_mon_client",new MonClientMessageFactory(g_ceph_context));
+    messenger = smessenger = Messenger::create_client_messenger(cct, "temp_mon_client",new MonClientMessageFactory(cct));
     if (NULL == messenger) {
         return -1;
     }
