@@ -1,8 +1,12 @@
 include(MergeStaticLibraries)
 
 add_library(cephd_base STATIC
+
   libcephd.cc
-  ../ceph_mon.cc
+  Dispatcher.cc
+  Messengers.cc
+  Objecter.cc
+  ../ceph_mon.cc 
   ../ceph_osd.cc)
 
 set_target_properties(cephd_base PROPERTIES COMPILE_DEFINITIONS BUILDING_FOR_EMBEDDED)
