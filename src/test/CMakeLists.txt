@@ -893,7 +893,7 @@ set_target_properties(unittest_direct_messenger
 add_executable(libosd_bench_async2 EXCLUDE_FROM_ALL libosd_bench_async2.cc)
 add_test(libosd_bench_async2 libosd_bench_async2)
 add_dependencies(check libosd_bench_async2)
-target_link_libraries(libosd_bench_async2 PRIVATE osd common pthread leveldb)
+target_link_libraries(libosd_bench_async2  osd common pthread leveldb cephd_base)
 set_target_properties(libosd_bench_async2
   PROPERTIES COMPILE_FLAGS ${UNITTEST_CXX_FLAGS})
 

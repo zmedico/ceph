@@ -1,9 +1,13 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
 
+#define dout_context g_ceph_context
 #include <condition_variable>
 #include <mutex>
 #include "ceph_osd.h"
+
+#include "msg/Connection.h"
+#include "include/types.h"
 
 #include "Context.h"
 #include "Dispatcher.h"
@@ -12,13 +16,16 @@
 
 #include "os/ObjectStore.h"
 #include "osd/OSD.h"
+#include "osd/StateObserver.h"
 #include "mon/MonClient.h"
+#include "mon/MessageFactory.h"
 
-#include "msg/DirectMessenger.h"
+#include "msg/direct/DirectMessenger.h"
 #include "msg/FastStrategy.h"
 
 #include "common/Finisher.h"
 #include "common/common_init.h"
+#include "common/errno.h"
 #include "include/color.h"
 
 #define dout_subsys ceph_subsys_osd
@@ -146,7 +153,7 @@ int LibOSD::init(const struct libosd_init_args *args)
   if (r != 0)
     return r;
 
-  common_init_finish(cct, 0);
+  common_init_finish(cct);
 
   // monitor client
   monc = new MonClient(cct);
@@ -158,7 +165,7 @@ int LibOSD::init(const struct libosd_init_args *args)
   const pid_t pid = getpid();
 
   // create and bind messengers
-  ms = new Messengers(&monc->factory);
+  ms = new Messengers(new MonClientMessageFactory(cct)); // FIXME
   r = ms->create(cct, cct->_conf, me, pid);
   if (r != 0) {
     derr << TEXT_RED << " ** ERROR: messenger creation failed: "
@@ -205,7 +212,7 @@ int LibOSD::init(const struct libosd_init_args *args)
   finisher->start();
 
   // register for state change notifications
-  osd->add_state_observer(this);
+  // add_state_observer(this);
 
   // start messengers
   ms->start();
@@ -242,7 +249,7 @@ void LibOSD::init_dispatcher(OSD *osd)
 
   // attach a session; we bypass OSD::ms_verify_authorizer, which
   // normally takes care of this
-  OSD::Session *s = new OSD::Session;
+  OSD::Session *s = new OSD::Session(cct);
   s->con = conn;
   s->entity_name.set_name(ms_client->get_myname());
   s->auid = CEPH_AUTH_UID_DEFAULT;
@@ -332,8 +339,8 @@ int LibOSD::get_volume(const char *name, uint8_t id[16])
 
   OSDMapRef osdmap = osd->service.get_osdmap();
   try {
-    Volume volume(osdmap->lookup_volume(name));
-    memcpy(id, &volume.id, sizeof(volume.id));
+//    Volume volume(osdmap->lookup_volume(name));
+//    memcpy(id, &volume.id, sizeof(volume.id));
     return 0;
   } catch (std::exception& e) {
     return -ENOENT;

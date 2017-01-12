@@ -7,9 +7,10 @@
 #include <atomic>
 #include <condition_variable>
 
-#include "libosd/ceph_osd.h"
+#include "libcephd/ceph_osd.h"
 #include "common/ceph_argparse.h"
 #include "common/likely.h"
+#include "common/ceph_time.h"
 
 #define dout_subsys ceph_subsys_osd
 
@@ -282,7 +283,7 @@ int main(int argc, const char *argv[])
   osd->shutdown();
   osd->join();
 
-  std::this_thread::sleep_for(10s);
+  std::this_thread::sleep_for(std::chrono::seconds(10));
 
   libosd_cleanup(osd);
   std::cout << "libosd_cleanup() finished" << std::endl;

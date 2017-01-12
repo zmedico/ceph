@@ -19,7 +19,7 @@ class Dispatcher : public ::Dispatcher {
 public:
   struct OnReply {
     virtual ~OnReply() {}
-    virtual void on_reply(Message *m) = 0;
+    virtual void on_reply(Message *m) {};
   };
 
 private:
@@ -28,6 +28,8 @@ private:
   std::atomic<ceph_tid_t> next_tid;
 
 public:
+  virtual bool ms_handle_refused(Connection *con) {return true;}
+  
   Dispatcher(CephContext *cct, Messenger *ms, ConnectionRef conn);
 
   void send_request(Message *m, OnReply *c);

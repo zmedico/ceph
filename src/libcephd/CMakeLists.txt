@@ -6,6 +6,8 @@ add_library(cephd_base STATIC
   Dispatcher.cc
   Messengers.cc
   Objecter.cc
+  libosd.cc
+  Context.cc
   ../ceph_mon.cc 
   ../ceph_osd.cc)
 
@@ -30,6 +32,8 @@ set(merge_libs
   osd
   osdc
   rocksdb)
+
+target_link_libraries(cephd_base LINK_PRIVATE common osd)
 
 if(HAVE_ARMV8_CRC)
   list(APPEND merge_libs common_crc_aarch64)
