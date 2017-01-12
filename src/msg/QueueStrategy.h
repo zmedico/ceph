@@ -19,11 +19,12 @@
 #include <boost/intrusive/list.hpp>
 #include "DispatchStrategy.h"
 #include "msg/Messenger.h"
-
+#include "common/Mutex.h"
 namespace bi = boost::intrusive;
 
+
 class QueueStrategy : public DispatchStrategy {
-  Mutex lock;
+  std::mutex lock;
   int n_threads;
   bool stop;
 
@@ -33,7 +34,7 @@ class QueueStrategy : public DispatchStrategy {
   public:
     bi::list_member_hook<> thread_q;
     QueueStrategy *dq;
-    Cond cond;
+    std::condition_variable cond;
     explicit QSThread(QueueStrategy *dq) : thread_q(), dq(dq), cond() {}
     void* entry() {
       dq->entry(this);

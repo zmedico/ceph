@@ -8,6 +8,8 @@
 
 #include "msg/simple/SimpleMessenger.h"
 #include "msg/async/AsyncMessenger.h"
+#include "msg/direct/DirectMessenger.h"
+#include "msg/QueueStrategy.h"
 #ifdef HAVE_XIO
 #include "msg/xio/XioMessenger.h"
 #endif
@@ -35,6 +37,8 @@ Messenger *Messenger::create(CephContext *cct, const string &type,
     std::uniform_int_distribution<> dis(0, 1);
     r = dis(random_engine);
   }
+  if (type == "direct")
+    return new DirectMessenger(cct, name, lname, nonce, factory, new QueueStrategy(1));
   if (r == 0 || type == "simple")
     return new SimpleMessenger(cct, name, lname, nonce, factory);
   else if (r == 1 || type == "async")
