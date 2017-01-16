@@ -172,7 +172,8 @@ int LibOSD::init(const struct libosd_init_args *args)
 	 << cpp_strerror(-r) << TEXT_NORMAL << dendl;
     return r;
   }
-
+  g_ceph_context = cct; // FIXME
+  g_conf = cct->_conf;  // FIXME
   r = ms->bind(cct, cct->_conf);
   if (r != 0) {
     derr << TEXT_RED << " ** ERROR: bind failed: " << cpp_strerror(-r)
@@ -192,7 +193,7 @@ int LibOSD::init(const struct libosd_init_args *args)
 
   // create osd
   osd = new OSD(cct, store, whoami,
-		ms->cluster, ms->client, ms->client_xio,
+		ms->cluster, ms->client, ms->client,
 		ms->client_hb, ms->front_hb, ms->back_hb,
 		monc, cct->_conf->osd_data, cct->_conf->osd_journal);
 

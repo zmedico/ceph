@@ -184,7 +184,7 @@ void benchmark(struct libosd *osd, uint8_t *uuid, int nthreads,
 
 int main(int argc, const char *argv[])
 {
-  const struct libosd_init_args init_args {
+  struct libosd_init_args init_args {
     .id = 0,
     .config = nullptr,
     .cluster = nullptr,
@@ -213,6 +213,9 @@ int main(int argc, const char *argv[])
     if (ceph_argparse_witharg(args, i, &val,
 			      "--threads", (char*)NULL)) {
       threads = atoi(val.c_str());
+    } else if (ceph_argparse_witharg(args, i, &val,
+			      "--id", (char*)NULL)) {
+      init_args.id = atoi(val.c_str());
     } else if (ceph_argparse_witharg(args, i, &val, "--depth",
 				     (char*)NULL)) {
       depth = atoi(val.c_str());

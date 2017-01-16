@@ -1,7 +1,7 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
 
-#define dout_context g_ceph_context
+#define dout_context cct
 #include "Messengers.h"
 
 #include "msg/Messenger.h"
@@ -70,11 +70,12 @@ Messengers::~Messengers()
   delete msg_throttler;
 }
 
-Messenger* create_messenger(CephContext *cct, const entity_name_t &me,
+Messenger* create_messenger(CephContext *cct, const string &type,
+			    const entity_name_t &me,
 			    const char *name, pid_t pid,
 			    MessageFactory *factory)
 {
-  Messenger *ms = Messenger::create(cct, "direct",
+  Messenger *ms = Messenger::create(cct, type,
 				    me, name, pid, 0, factory);
   ms->set_cluster_protocol(CEPH_OSD_PROTOCOL);
   return ms;
@@ -114,11 +115,11 @@ int Messengers::create(CephContext *cct, md_config_t *conf,
     back_hb = create_messenger(cct, name, "hb_back", pid, &factory);
   }
 #else // !HAVE_XIO
-  cluster = create_messenger(cct, name, "cluster", pid, &factory);
-  client = create_messenger(cct, name, "client", pid, &factory);
-  client_hb = create_messenger(cct, name, "hbclient", pid, &factory);
-  front_hb = create_messenger(cct, name, "hb_front", pid, &factory);
-  back_hb = create_messenger(cct, name, "hb_back", pid, &factory);
+  cluster = create_messenger(cct, "direct", name, "cluster", pid, &factory);
+  client = create_messenger(cct, "simple", name, "client", pid, &factory);
+  client_hb = create_messenger(cct, "simple", name, "hbclient", pid, &factory);
+  front_hb = create_messenger(cct,"simple",  name, "hb_front", pid, &factory);
+  back_hb = create_messenger(cct, "simple", name, "hb_back", pid, &factory);
 #endif // !HAVE_XIO
 
   // set up policies
@@ -179,7 +180,7 @@ int Messengers::bind(CephContext *cct, md_config_t *conf)
   // bind messengers
   pick_addresses(cct, CEPH_PICK_ADDRESS_PUBLIC|CEPH_PICK_ADDRESS_CLUSTER);
   dout(10) << __FUNCTION__ << ": client " << conf->public_addr
-    << ", cluster " << conf->cluster_addr << dendl;
+	   << ", cluster " << conf->cluster_addr  << dendl;
 
   if (conf->public_addr.is_blank_ip() &&
       !conf->cluster_addr.is_blank_ip()) {
