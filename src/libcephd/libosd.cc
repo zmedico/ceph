@@ -23,6 +23,7 @@
 #include "msg/direct/DirectMessenger.h"
 #include "msg/FastStrategy.h"
 
+#include "common/pick_address.h"
 #include "common/Finisher.h"
 #include "common/common_init.h"
 #include "common/errno.h"
@@ -164,6 +165,9 @@ int LibOSD::init(const struct libosd_init_args *args)
   const entity_name_t me(entity_name_t::OSD(whoami));
   const pid_t pid = getpid();
 
+  g_ceph_context = cct; // FIXME
+  g_conf = cct->_conf;  // FIXME
+
   // create and bind messengers
   ms = new Messengers(new MonClientMessageFactory(cct)); // FIXME
   r = ms->create(cct, cct->_conf, me, pid);
@@ -172,8 +176,8 @@ int LibOSD::init(const struct libosd_init_args *args)
 	 << cpp_strerror(-r) << TEXT_NORMAL << dendl;
     return r;
   }
-  g_ceph_context = cct; // FIXME
-  g_conf = cct->_conf;  // FIXME
+  g_ceph_context->crush_location.init_on_startup(); // FIXME
+
   r = ms->bind(cct, cct->_conf);
   if (r != 0) {
     derr << TEXT_RED << " ** ERROR: bind failed: " << cpp_strerror(-r)
@@ -193,8 +197,8 @@ int LibOSD::init(const struct libosd_init_args *args)
 
   // create osd
   osd = new OSD(cct, store, whoami,
-		ms->cluster, ms->client, ms->client,
-		ms->client_hb, ms->front_hb, ms->back_hb,
+		ms->cluster, ms->client, ms->client_hb,
+		ms->front_hb, ms->back_hb, ms->client,
 		monc, cct->_conf->osd_data, cct->_conf->osd_journal);
 
   // set up the dispatcher
@@ -213,7 +217,7 @@ int LibOSD::init(const struct libosd_init_args *args)
   finisher->start();
 
   // register for state change notifications
-  // add_state_observer(this);
+  osd->add_state_observer(this);
 
   // start messengers
   ms->start();

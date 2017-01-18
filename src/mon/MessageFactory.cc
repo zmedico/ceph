@@ -258,7 +258,7 @@ Message* MonClientMessageFactory::create(int type)
 
   case MSG_LOG:                       return new MLog;
   case MSG_LOGACK:                    return new MLogAck;
-
+  case MSG_MGR_MAP:                   return new MMgrMap;
   case CEPH_MSG_MON_SUBSCRIBE:
     return new MMonSubscribe;
 

@@ -115,7 +115,7 @@ int Messengers::create(CephContext *cct, md_config_t *conf,
     back_hb = create_messenger(cct, name, "hb_back", pid, &factory);
   }
 #else // !HAVE_XIO
-  cluster = create_messenger(cct, "direct", name, "cluster", pid, &factory);
+  cluster = create_messenger(cct, "simple", name, "cluster", pid, &factory);
   client = create_messenger(cct, "simple", name, "client", pid, &factory);
   client_hb = create_messenger(cct, "simple", name, "hbclient", pid, &factory);
   front_hb = create_messenger(cct,"simple",  name, "hb_front", pid, &factory);

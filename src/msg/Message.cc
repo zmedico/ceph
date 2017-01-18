@@ -327,7 +327,7 @@ Message *decode_message(MessageFactory *factory,CephContext *cct, int crcflags,
 
   // make message
 
-#if 0 /* XXXX remove me */
+#if 1 /* XXXX remove me */
   Message *m = 0;
   int type = header.type;
   switch (type) {

@@ -4382,6 +4382,7 @@ void OSD::tick()
 
   if (is_waiting_for_healthy()) {
     start_boot();
+    notify_state_observers(state, osdmap->get_epoch());
   }
 
   do_waiters();
@@ -4994,6 +4995,7 @@ void OSD::_preboot(epoch_t oldest, epoch_t newest)
 void OSD::start_waiting_for_healthy()
 {
   dout(1) << "start_waiting_for_healthy" << dendl;
+  notify_state_observers(state, osdmap->get_epoch());
   set_state(STATE_WAITING_FOR_HEALTHY);
   last_heartbeat_resample = utime_t();
 }
@@ -7436,6 +7438,8 @@ void OSD::consume_map()
   service.pre_publish_map(osdmap);
   service.await_reserved_maps();
   service.publish_map(osdmap);
+
+  notify_state_observers(state, osdmap->get_epoch());
 
   dispatch_sessions_waiting_on_map();
 

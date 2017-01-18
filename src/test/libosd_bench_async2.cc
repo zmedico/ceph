@@ -225,6 +225,9 @@ int main(int argc, const char *argv[])
     } else if (ceph_argparse_witharg(args, i, &val, "--volume",
 				     (char*)NULL)) {
       volume = val;
+    } else if (ceph_argparse_witharg(args, i, &val, "--conf",
+				     (char*)NULL)) {
+      init_args.config = strdup(val.c_str());
     } else
       ++i;
   }
