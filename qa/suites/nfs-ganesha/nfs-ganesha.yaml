@@ -1,0 +1,6 @@
+roles:
+- [mon.a, osd.0, mds.0]
+tasks:
+- install:
+- nfs-ganesha:
+- ceph:
