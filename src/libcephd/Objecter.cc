@@ -160,7 +160,7 @@ int Objecter::read(const char *object, const uint8_t volume[16],
 
   const int client = 0;
   const long tid = 0;
-//  oid_t oid(object);
+  object_t oid(object);
   boost::uuids::uuid vol;
   epoch_t epoch = 0;
   memcpy(&vol, volume, sizeof(vol));
@@ -169,9 +169,18 @@ int Objecter::read(const char *object, const uint8_t volume[16],
     return -ENODEV;
 
   // set up osd read op
-  MOSDOp *m = new MOSDOp();
-//  OpRequest *m =
-//    new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
+  int64_t pool_id(0);
+  object_locator_t oloc(pool_id);
+  pg_t pgid;
+  // int client_inc
+  // long tid
+  // object_locator_t *
+  // pg_id *
+  // epoch
+  // flags
+  // features
+  MOSDOp *m =
+    new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
 
   m->read(offset, length);
 

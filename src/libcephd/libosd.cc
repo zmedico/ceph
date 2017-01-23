@@ -258,6 +258,7 @@ void LibOSD::init_dispatcher(OSD *osd)
   s->con = conn;
   s->entity_name.set_name(ms_client->get_myname());
   s->auid = CEPH_AUTH_UID_DEFAULT;
+  s->caps.set_allow_all(); // FIXME
   conn->set_priv(s);
 
   // allocate the dispatcher

@@ -31,7 +31,7 @@ void Dispatcher::send_request(Message *m, OnReply *c)
   m->libosd_context = c;
 
   // send to server messenger
-  conn.get()->send_message(m);
+//  conn.get()->send_message(m);
   ms->send_message(m, conn.get());
 }
 
