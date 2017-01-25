@@ -143,7 +143,18 @@ int Objecter::read_sync(const char *object, const uint8_t volume[16],
   MOSDOp *m =
     new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
 
-  m->read(offset, length);
+  m->set_snapid(CEPH_NOSNAP);
+
+  vector<OSDOp> ops;
+      ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_READ;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.length = length;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].op.flags = flags;
+    m->ops=ops;
+//  m->read(offset, length);
 
   // create reply callback
   OnReadReply onreply(data, length, SyncCompletion::callback,
@@ -186,7 +197,20 @@ int Objecter::read(const char *object, const uint8_t volume[16],
   MOSDOp *m =
     new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
 
-  m->read(offset, length);
+  m->set_snapid(CEPH_NOSNAP);
+
+  vector<OSDOp> ops;
+      ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_READ;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.length = length;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].op.flags = flags;
+    m->ops=ops;
+
+//  m->outbl = bl;
+//  m->read(offset, length);
 
   // create reply callback
   OnReadReply *onreply = new OnReadReply(data, length, cb, user);
@@ -288,11 +312,23 @@ int Objecter::write_sync(const char *object, const uint8_t volume[16],
   // set up osd write op
   MOSDOp *m =
     new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
+  m->set_snapid(CEPH_NOSNAP);
 //  MOSDOp *m = new MOSDOp();
 //  OpRequest *m =
 //    new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
 
-  m->write(offset, length, bl);
+//  m->write(offset, length, bl);
+
+    vector<OSDOp> ops;
+    ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_WRITE;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.length = length;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].indata = bl;
+    ops[0].op.flags = flags;
+    m->ops=ops;
 
   if (flags & LIBOSD_WRITE_CB_UNSTABLE)
     m->set_want_ack(true);
@@ -318,10 +354,13 @@ int Objecter::write(const char *object, const uint8_t volume[16],
 
   const int client = 0;
   const long tid = 0;
-//  oid_t oid(object);
+  object_t oid(object);
   boost::uuids::uuid vol;
   epoch_t epoch = 0;
   mempcpy(&vol, volume, sizeof(vol));
+  int64_t pool_id(0);
+  object_locator_t oloc(pool_id);
+  pg_t pgid;
 
   // when asynchronous, flags must specify one or more of UNSTABLE or STABLE
   if ((flags & WRITE_CB_FLAGS) == 0)
@@ -335,8 +374,21 @@ int Objecter::write(const char *object, const uint8_t volume[16],
 
   // set up osd write op
 //  OpRequest *m = new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
-  MOSDOp *m = new MOSDOp();
-  m->write(offset, length, bl);
+  MOSDOp *m =
+    new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
+  m->set_snapid(CEPH_NOSNAP);
+//  MOSDOp *m = new MOSDOp();
+//  m->write(offset, length, bl);
+    vector<OSDOp> ops;
+    ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_WRITE;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.length = length;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].indata = bl;
+    ops[0].op.flags = flags;
+    m->ops=ops;
 
   if (flags & LIBOSD_WRITE_CB_UNSTABLE)
     m->set_want_ack(true);
