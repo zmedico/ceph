@@ -408,10 +408,14 @@ int Objecter::truncate_sync(const char *object, const uint8_t volume[16],
 {
   const int client = 0;
   const long tid = 0;
-//  oid_t oid(object);
+  object_t oid(object);
   boost::uuids::uuid vol;
   epoch_t epoch = 0;
   SyncCompletion completion;
+  int64_t pool_id(0);
+  object_locator_t oloc(pool_id);
+  pg_t pgid;
+
   memcpy(&vol, volume, sizeof(vol));
 
   // when synchronous, flags must specify exactly one of UNSTABLE or STABLE
@@ -423,9 +427,19 @@ int Objecter::truncate_sync(const char *object, const uint8_t volume[16],
     return -ENODEV;
 
   // set up osd truncate op
-  MOSDOp *m = new MOSDOp();
-//  OpRequest *m = new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
-  m->truncate(offset);
+//  MOSDOp *m = new MOSDOp();
+  MOSDOp *m =
+    new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
+    vector<OSDOp> ops;
+    ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_TRUNCATE;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].op.flags = flags;
+    m->ops=ops;
+
+//  m->truncate(offset);
 
   if (flags & LIBOSD_WRITE_CB_UNSTABLE)
     m->set_want_ack(true);
@@ -451,10 +465,13 @@ int Objecter::truncate(const char *object, const uint8_t volume[16],
 
   const int client = 0;
   const long tid = 0;
-//  oid_t oid(object);
+  object_t oid(object);
   boost::uuids::uuid vol;
   epoch_t epoch = 0;
   memcpy(&vol, volume, sizeof(vol));
+  int64_t pool_id(0);
+  object_locator_t oloc(pool_id);
+  pg_t pgid;
 
   if ((flags & WRITE_CB_FLAGS) == 0) {
     // when asynchronous, flags must specify one or more of UNSTABLE or STABLE
@@ -466,9 +483,20 @@ int Objecter::truncate(const char *object, const uint8_t volume[16],
 
   // set up osd truncate op
 //  OpRequest *m = new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
-    MOSDOp *m = new MOSDOp();
+//    MOSDOp *m = new MOSDOp();
 
-  m->truncate(offset);
+      MOSDOp *m =
+    new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
+    vector<OSDOp> ops;
+    ops.resize(1);
+    ops[0].op.op = CEPH_OSD_OP_TRUNCATE;
+    ops[0].op.extent.offset = offset;
+    ops[0].op.extent.truncate_size = 0;
+    ops[0].op.extent.truncate_seq = 0;
+    ops[0].op.flags = flags;
+    m->ops=ops;
+
+//  m->truncate(offset);
 
   if (flags & LIBOSD_WRITE_CB_UNSTABLE)
     m->set_want_ack(true);
