@@ -185,7 +185,7 @@ static int test_async_write(struct libosd *osd, const uint8_t volume[16])
     fprintf(stderr, "libosd_write(flags=UNSTABLE|STABLE) failed with %d\n", r);
     return r;
   }
-  r = wait_for_completion(&io3, 2); // wait for both callbacks
+  r = wait_for_completion(&io3, 1); // wait for both callbacks
   if (r != 0) {
     fprintf(stderr, "completion_cb(flags=UNSTABLE|STABLE) got result %d\n", r);
     return r;

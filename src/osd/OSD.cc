@@ -2685,6 +2685,8 @@ int OSD::shutdown()
   cct->_conf->set_val("debug_ms", "100");
   cct->_conf->apply_changes(NULL);
 
+  notify_state_observers(state, osdmap->get_epoch());
+
   service.start_shutdown();
 
   clear_waiting_sessions();

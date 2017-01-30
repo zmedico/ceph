@@ -104,6 +104,9 @@ int DirectMessenger::send_message(Message *m, const entity_inst_t& dst)
 {
   assert(dst == peer_inst); // DirectMessenger can only send to its peer
   m->set_connection(connection);
+  m->set_recv_stamp(ceph_clock_now());
+  m->set_throttle_stamp(ceph_clock_now());
+
   peer_dispatchers->ds_dispatch(m);
   return 0;
 }
