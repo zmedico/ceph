@@ -60,8 +60,8 @@ struct libosd {
    * Look up a volume by name to get its uuid.
    * @see libosd_get_volume()
    */
-  virtual int get_volume(const char *name,
-			 uint8_t id[16]) = 0;
+  virtual int64_t get_volume(const char *name,
+			     uint8_t id[16]) = 0;
 
   /**
    * Read from an object.
@@ -81,7 +81,7 @@ struct libosd {
   /** Truncate an object.
    * @see libosd_truncate()
    */
-  virtual int truncate(const char *object, const uint8_t volume[16],
+  virtual int truncate(const char *object, uint8_t volume[16],
 		       uint64_t offset, int flags,
 		       libosd_io_completion_fn cb, void *user) = 0;
 
@@ -263,7 +263,7 @@ int libosd_write(struct libosd *osd, const char *object, const uint8_t volume[16
  * @retval -ENODEV if the OSD is shutting down.
  */
 int libosd_truncate(struct libosd *osd, const char *object,
-		    const uint8_t volume[16], uint64_t offset,
+		    uint8_t volume[16], uint64_t offset,
 		    int flags, libosd_io_completion_fn cb, void *user);
 
 #ifdef __cplusplus

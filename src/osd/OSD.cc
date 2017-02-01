@@ -3257,7 +3257,9 @@ PGRef OSD::get_pg_or_queue_for_pg(const spg_t& pgid, OpRequestRef& op,
     session->waiting_for_pg.find(pgid);
 
   PG *out = NULL;
-  if (wlistiter == session->waiting_for_pg.end()) {
+  map<spg_t, list<OpRequestRef> >::iterator wlistiter2 = session->waiting_for_pg.end();
+
+  if (wlistiter == wlistiter2) {
     out = i->second;
   } else {
     wlistiter->second.push_back(op);

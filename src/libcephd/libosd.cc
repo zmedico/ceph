@@ -12,6 +12,7 @@
 #include "Context.h"
 #include "Dispatcher.h"
 #include "Messengers.h"
+#include "osd/OSDMap.h"
 #include "Objecter.h"
 
 #include "os/ObjectStore.h"
@@ -90,7 +91,7 @@ public:
   void shutdown();
   void signal(int signum);
 
-  int get_volume(const char *name, uint8_t id[16]);
+  int64_t get_volume(const char *name, uint8_t id[16]);
 
   // read/write/truncate satisfied by Objecter
   int read(const char *object, const uint8_t volume[16],
@@ -105,9 +106,12 @@ public:
     return Objecter::write(object, volume, offset, length,
 			   data, flags, cb, user);
   }
-  int truncate(const char *object, const uint8_t volume[16], uint64_t offset,
+  int truncate(const char *object, uint8_t volume[16], uint64_t offset,
 	       int flags, libosd_io_completion_fn cb, void *user) {
-    return Objecter::truncate(object, volume, offset, flags, cb, user);
+    char *id= (char *)volume; // FIXME
+    int64_t pool_id = get_volume(id,volume);
+    OSDMapRef osdmap = osd->service.get_osdmap();
+    return Objecter::truncate(object, pool_id, osdmap, offset, flags, cb, user);
   }
 };
 
@@ -336,7 +340,7 @@ void LibOSD::signal(int signum)
   osd->handle_signal(signum);
 }
 
-int LibOSD::get_volume(const char *name, uint8_t id[16])
+int64_t LibOSD::get_volume(const char *name, uint8_t id[16])
 {
   // wait for osdmap
   epoch_t epoch;
@@ -345,9 +349,7 @@ int LibOSD::get_volume(const char *name, uint8_t id[16])
 
   OSDMapRef osdmap = osd->service.get_osdmap();
   try {
-//    Volume volume(osdmap->lookup_volume(name));
-//    memcpy(id, &volume.id, sizeof(volume.id));
-    return 0;
+    return osdmap->lookup_pg_pool_name("rbd"); // FIXME
   } catch (std::exception& e) {
     return -ENOENT;
   }
@@ -481,8 +483,9 @@ int libosd_write(struct libosd *osd, const char *object, const uint8_t volume[16
   }
 }
 
+// FIXME - locater key? namespace?
 int libosd_truncate(struct libosd *osd, const char *object,
-		    const uint8_t volume[16], uint64_t offset,
+		    uint8_t volume[16], uint64_t offset,
 		    int flags, libosd_io_completion_fn cb, void *user)
 {
   try {

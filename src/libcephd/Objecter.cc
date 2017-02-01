@@ -6,6 +6,7 @@
 #include "ceph_osd.h"
 
 #include "msg/Connection.h"
+#include "osd/OSDMap.h"
 #include "Objecter.h"
 #include "Dispatcher.h"
 #include "osd/OpRequest.h"
@@ -403,20 +404,18 @@ int Objecter::write(const char *object, const uint8_t volume[16],
   return 0;
 }
 
-int Objecter::truncate_sync(const char *object, const uint8_t volume[16],
-                            uint64_t offset, int flags)
+  int Objecter::truncate_sync(const char *object, const int64_t pool_id,
+			      OSDMapRef &omap,uint64_t offset, int flags)
 {
   const int client = 0;
   const long tid = 0;
   object_t oid(object);
-  boost::uuids::uuid vol;
   epoch_t epoch = 0;
   SyncCompletion completion;
-  int64_t pool_id(0);
   object_locator_t oloc(pool_id);
   pg_t pgid;
 
-  memcpy(&vol, volume, sizeof(vol));
+  omap->object_locator_to_pg(oid, oloc, pgid);
 
   // when synchronous, flags must specify exactly one of UNSTABLE or STABLE
   if ((flags & WRITE_CB_FLAGS) == 0 ||
@@ -456,23 +455,22 @@ int Objecter::truncate_sync(const char *object, const uint8_t volume[16],
 
 }
 
-int Objecter::truncate(const char *object, const uint8_t volume[16],
-		       uint64_t offset, int flags,
+  int Objecter::truncate(const char *object, const int64_t pool_id,
+			 OSDMapRef& omap, uint64_t offset, int flags,
 		       libosd_io_completion_fn cb, void *user)
 {
   if (cb == nullptr)
-    return truncate_sync(object, volume, offset, flags);
+    return truncate_sync(object, pool_id, omap, offset, flags);
 
   const int client = 0;
   const long tid = 0;
   object_t oid(object);
-  boost::uuids::uuid vol;
   epoch_t epoch = 0;
-  memcpy(&vol, volume, sizeof(vol));
-  int64_t pool_id(0);
   object_locator_t oloc(pool_id);
   pg_t pgid;
 
+  omap->object_locator_to_pg(oid, oloc, pgid);
+  
   if ((flags & WRITE_CB_FLAGS) == 0) {
     // when asynchronous, flags must specify one or more of UNSTABLE or STABLE
     return -EINVAL;
@@ -482,8 +480,6 @@ int Objecter::truncate(const char *object, const uint8_t volume[16],
     return -ENODEV;
 
   // set up osd truncate op
-//  OpRequest *m = new OpRequest(client, tid, std::move(oid), vol, epoch, 0);
-//    MOSDOp *m = new MOSDOp();
 
       MOSDOp *m =
     new MOSDOp(client, tid, oid, oloc, pgid, epoch, flags,0);
