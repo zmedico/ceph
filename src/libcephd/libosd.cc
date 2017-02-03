@@ -43,6 +43,16 @@ typedef std::map<int, libosd*> osdmap;
 osdmap osds;
 }
 
+namespace {
+
+TracepointProvider::Traits osd_tracepoint_traits("libosd_tp.so",
+                                                 "osd_tracing");
+TracepointProvider::Traits os_tracepoint_traits("libos_tp.so",
+                                                "osd_objectstore_tracing");
+
+} // anonymous namespace
+
+
 namespace ceph
 {
 namespace osd
@@ -227,6 +237,9 @@ int LibOSD::init(const struct libosd_init_args *args)
   ms->start();
   ms_client->start();
   ms_server->start();
+
+  TracepointProvider::initialize<osd_tracepoint_traits>(g_ceph_context);
+  TracepointProvider::initialize<os_tracepoint_traits>(g_ceph_context);
 
   // start osd
   r = osd->init();
