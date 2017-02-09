@@ -401,6 +401,10 @@ def cluster(ctx, config):
     osds = ctx.cluster.only(teuthology.is_type('osd', cluster_name))
     for remote, roles_for_host in osds.remotes.iteritems():
         devs = teuthology.get_scratch_devices(remote)
+        need_osds  = [role for role in roles_for_host if role.startswith('osd')]
+        if len(need_osds) > len(devs):
+            log.info("Need %d devices, Available %s" % (len(need_osds), str(devs)))
+            raise CephInsufficientDevError("Insufficient number of raw devices on remote host")
         roles_to_devs = {}
         roles_to_journals = {}
         if config.get('fs'):
@@ -1337,6 +1341,9 @@ def validate_config(ctx, config):
             last_cluster = role_cluster
             last_role = role
 
+class CephInsufficientDevError(Exception):
+    pass
+
 
 @contextlib.contextmanager
 def task(ctx, config):
@@ -1495,7 +1502,7 @@ def task(ctx, config):
     subtasks += [
         lambda: cluster(ctx=ctx, config=dict(
             conf=config.get('conf', {}),
-            fs=config.get('fs', None),
+            fs=config.get('fs', 'xfs'),
             mkfs_options=config.get('mkfs_options', None),
             mount_options=config.get('mount_options', None),
             block_journal=config.get('block_journal', None),
@@ -1529,3 +1536,4 @@ def task(ctx, config):
         finally:
             if config.get('wait-for-scrub', True):
                 osd_scrub_pgs(ctx, config)
+
