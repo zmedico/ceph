@@ -74,6 +74,9 @@ def install_ceph_deploy(ctx, config):
     Install ceph-deploy rpm or debian package, Along with
     any additional extra packages requested in config.
     """
+    rhbuild = config.get('rhbuild')
+    if rhbuild in GA_BUILDS:
+        set_cdn_repo(ctx)
     for remote in ctx.cluster.remotes.iterkeys():
         if remote.os.package_type == 'deb':
             deb_pkgs = ['ceph-deploy', 'ceph-test']
