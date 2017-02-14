@@ -20,6 +20,7 @@ from teuthology.orchestra.daemon import DaemonGroup, run
 from tasks.cephfs.filesystem import Filesystem
 from ceph_manager import CephManager
 from tasks.set_repo import GA_BUILDS, set_cdn_repo
+from teuthology.task.internal.redhat import _setup_latest_repo as setup_latest_repo
 
 log = logging.getLogger(__name__)
 ceph_admin = ''
@@ -871,7 +872,7 @@ def upgrade(ctx, config):
             if rhbuild in GA_BUILDS:
                 set_cdn_repo(ctx)
             else:
-                setup_latest_rh_repo(ctx, config)
+                setup_latest_repo(ctx, config)
             stopceph(remote)
             nodename = remote.shortname
             log.info("Upgrading ceph on  %s", nodename)
@@ -945,7 +946,7 @@ def upgrade_simple(ctx, config):
             if rhbuild in GA_BUILDS:
                 set_cdn_repo(ctx)
             else:
-                setup_latest_rh_repo(ctx, config)
+                setup_latest_repo(ctx, config)
             stopceph(remote)
             nodename = remote.shortname
             log.info("Upgrading ceph on  %s", nodename)
