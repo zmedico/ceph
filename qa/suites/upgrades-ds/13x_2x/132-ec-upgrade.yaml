@@ -1,4 +1,4 @@
-set_cdn_repo:
+set-cdn-repo:
     rhbuild: '1.3.2'
 overrides:
   ceph-deploy:

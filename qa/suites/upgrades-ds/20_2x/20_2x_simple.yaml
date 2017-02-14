@@ -1,4 +1,4 @@
-set_cdn_repo:
+set-cdn-repo:
     rhbuild: '2.0'
 overrides:
   ceph-ansible:
