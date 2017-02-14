@@ -76,7 +76,7 @@ def install_ceph_deploy(ctx, config):
     """
     rhbuild = config.get('rhbuild')
     if rhbuild in GA_BUILDS:
-        set_cdn_repo(ctx)
+        set_cdn_repo(ctx, config)
     for remote in ctx.cluster.remotes.iterkeys():
         if remote.os.package_type == 'deb':
             deb_pkgs = ['ceph-deploy', 'ceph-test']
@@ -873,7 +873,7 @@ def upgrade(ctx, config):
         for remote, roles in remotes_and_roles.iteritems():
             rhbuild = config.get('rhbuild')
             if rhbuild in GA_BUILDS:
-                set_cdn_repo(ctx)
+                set_cdn_repo(ctx, config)
             else:
                 setup_latest_repo(ctx, config)
             stopceph(remote)
@@ -947,7 +947,7 @@ def upgrade_simple(ctx, config):
         for remote, roles in remotes_and_roles.iteritems():
             rhbuild = config.get('rhbuild')
             if rhbuild in GA_BUILDS:
-                set_cdn_repo(ctx)
+                set_cdn_repo(ctx, config)
             else:
                 setup_latest_repo(ctx, config)
             stopceph(remote)
