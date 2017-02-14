@@ -1,3 +1,5 @@
+set_cdn_repo:
+    rhbuild: '2.0'
 overrides:
   ceph-ansible:
     vars:
