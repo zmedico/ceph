@@ -76,6 +76,8 @@ def task(ctx, config):
     upg_cmd = ['cd', 'ceph-ansible', run.Raw(';'),
                'ansible-playbook', '-e', 'ireallymeanit=yes',
                '-vv', '-i', 'inven.yml', 'rolling_update.yml']
-
+    while True:
+        log.info("sleeping for further debug")
+        time.sleep(6000)
     ceph_installer.run(args=upg_cmd, timeout=4200)
     yield
