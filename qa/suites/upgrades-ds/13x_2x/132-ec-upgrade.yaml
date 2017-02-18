@@ -20,12 +20,14 @@ overrides:
         osd pool default size: 2
 roles:
 - - mon.a
-  - mon.b
-  - mon.c
-  - osd.0
+- - mon.b
+- - mon.c
+- - osd.0
   - osd.1
-- - osd.2
-  - osd.3
+  - osd.2
+- - osd.3
+  - osd.4
+  - osd.5
 - - client.0
 tasks:
 - ssh-keys:
@@ -59,6 +61,8 @@ upgrade-first-half:
       latest: true
       roles:
        - mon.a
+       - mon.b
+       - mon.c
   - sleep:
       duration: 60
 upgrade-second-half:
@@ -67,6 +71,7 @@ upgrade-second-half:
       latest: true
       roles:
        - osd.2
+       - osd.5
 upgrade-sequence:
   sequential:
   - upgrade-first-half
