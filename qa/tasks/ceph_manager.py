@@ -211,11 +211,11 @@ class Thrasher:
                           format(fpath=FSPATH, jpath=JPATH))
             cmd = (prefix + "--op list-pgs").format(id=exp_osd)
 
-            # ceph-objectstore-tool might be temporarily absent during an 
+            # ceph-objectstore-tool might be temporarily absent during an
             # upgrade - see http://tracker.ceph.com/issues/18014
             with safe_while(sleep=15, tries=40, action="type ceph-objectstore-tool") as proceed:
                 while proceed():
-                    proc = exp_remote.run(args=['type', 'ceph-objectstore-tool'], 
+                    proc = exp_remote.run(args=['type', 'ceph-objectstore-tool'],
                                wait=True, check_status=False, stdout=StringIO(),
                                stderr=StringIO())
                     if proc.exitstatus == 0:
@@ -1269,9 +1269,12 @@ class CephManager:
             assert pool_name in self.pools
             self.log("removing pool_name %s" % (pool_name,))
             del self.pools[pool_name]
-            self.do_rados(self.controller,
-                          ['rmpool', pool_name, pool_name,
-                           "--yes-i-really-really-mean-it"])
+            try:
+                self.do_rados(self.controller,
+                              ['rmpool', pool_name, pool_name,
+                               "--yes-i-really-really-mean-it"])
+            except CommandFailedError:
+                self.log("Failed during pool removal")
 
     def get_pool(self):
         """
