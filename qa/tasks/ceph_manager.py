@@ -891,6 +891,7 @@ class CephManager:
         """
         testdir = teuthology.get_testdir(self.ctx)
         pre = [
+            'sudo',
             'adjust-ulimits',
             'ceph-coverage',
             '{tdir}/archive/coverage'.format(tdir=testdir),
