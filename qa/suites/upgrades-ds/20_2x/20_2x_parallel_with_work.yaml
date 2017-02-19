@@ -36,25 +36,14 @@ tasks:
       roles:
        - mon.a
        - mon.b
-  - rados:
-      clients:
-      - client.0
-      ec_pool: true
-      objects: 50
-      op_weights:
-        append: 100
-        copy_from: 50
-        delete: 50
-        read: 100
-        rmattr: 25
-        rollback: 50
-        setattr: 25
-        snap_create: 50
-        snap_remove: 50
-        write: 0
-      ops: 4000
-      write_append_excl: false
-  - print: '**** done rados ec task'
+  - rbd_fio:
+       client.0:
+         fio-io-size: 90%
+         formats: [2]
+         features: [[layering],[layering,exclusive-lock,object-map]]
+         io-engine: sync
+         rw: randrw
+         runtime: 900
   - workunit:
       branch: jewel
       clients:
