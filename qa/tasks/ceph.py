@@ -199,7 +199,7 @@ def ceph_log(ctx, config):
                         'gzip',
                         '--',
                     ],
-                    wait=False,
+                    check_status=False,
                 ),
             )
 
@@ -1536,4 +1536,3 @@ def task(ctx, config):
         finally:
             if config.get('wait-for-scrub', True):
                 osd_scrub_pgs(ctx, config)
-
