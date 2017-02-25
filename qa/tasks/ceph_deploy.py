@@ -103,9 +103,9 @@ def install_ceph_deploy(ctx, config):
     finally:
         for remote in ctx.cluster.remotes.iterkeys():
             if remote.os.package_type == 'deb':
-                remote.run(args=['sudo', 'apt-get', '-y', 'remove', deb_pkg])
+                remote.run(args=['sudo', 'apt-get', '-y', 'remove', deb_pkg], check_status=False)
             elif remote.os.package_type == 'rpm':
-                remote.run(args=['sudo', 'yum', '-y', 'remove', rpm_pkg])
+                remote.run(args=['sudo', 'yum', '-y', 'remove', rpm_pkg], check_status=False)
 
 
 def is_healthy(ctx, config):
