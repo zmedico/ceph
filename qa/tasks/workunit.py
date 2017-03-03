@@ -311,6 +311,11 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
     # use ds workunits
     git_url = 'https://code.engineering.redhat.com/gerrit/p/ceph.git'
     try:
+        # ignore ca cert errors
+        remote.run(
+                   args=['git', 'config', run.Raw('--global'),
+                         run.Raw('http.sslVerify'), 'false']
+                  )
         remote.run(
             logger=log.getChild(role),
             args=[
