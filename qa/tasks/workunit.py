@@ -8,7 +8,6 @@ import os
 from util import get_remote_for_role
 
 from teuthology import misc
-from teuthology.config import config as teuth_config
 from teuthology.orchestra.run import CommandFailedError
 from teuthology.parallel import parallel
 from teuthology.orchestra import run
@@ -308,7 +307,9 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
     clonedir = '{tdir}/clone.{role}'.format(tdir=testdir, role=role)
     srcdir = '{cdir}/qa/workunits'.format(cdir=clonedir)
 
-    git_url = teuth_config.get_ceph_git_url()
+    # git_url = teuth_config.get_ceph_git_url()
+    # use ds workunits
+    git_url = 'https://code.engineering.redhat.com/gerrit/p/ceph.git'
     try:
         remote.run(
             logger=log.getChild(role),
@@ -328,30 +329,12 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
             ],
         )
     except CommandFailedError:
-        alt_git_url = git_url.replace('ceph-ci', 'ceph')
         log.info(
-            "failed to check out '%s' from %s; will also try in %s",
+            "failed to check out '%s' from %s",
             refspec,
             git_url,
-            alt_git_url,
         )
-        remote.run(
-            logger=log.getChild(role),
-            args=[
-                'rm',
-                '-rf',
-                clonedir,
-                run.Raw('&&'),
-                'git',
-                'clone',
-                alt_git_url,
-                clonedir,
-                run.Raw('&&'),
-                'cd', '--', clonedir,
-                run.Raw('&&'),
-                'git', 'checkout', refspec,
-            ],
-        )
+        raise RuntimeError("Invalid git url")
 
     remote.run(
         logger=log.getChild(role),
