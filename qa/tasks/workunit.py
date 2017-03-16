@@ -309,7 +309,7 @@ def _run_tests(ctx, refspec, role, tests, env, subdir=None, timeout=None):
 
     # git_url = teuth_config.get_ceph_git_url()
     # use ds workunits
-    git_url = 'https://code.engineering.redhat.com/gerrit/p/ceph.git'
+    git_url = 'http://gitlab.osas.lab.eng.rdu2.redhat.com/ceph/ceph.git'
     try:
         # ignore ca cert errors
         remote.run(
