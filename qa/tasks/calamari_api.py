@@ -20,7 +20,12 @@ def task(ctx, config):
 
     overrides = ctx.config.get('overrides', {})
     teuthology.deep_merge(config, overrides.get('calamari-api', {}))
-    api_node = ctx.cluster.only(teuthology.get_first_mon(ctx, config))
+
+    remotes = ctx.cluster.only(teuthology.is_type('mon'))
+
+    api_node = [
+        remote for remote,
+                   roles_for_host in remotes.remotes.iteritems()][0]
 
     # clone the repo
 
@@ -35,8 +40,8 @@ def task(ctx, config):
 
     # restart calamari due to bz
 
-    api_node.run(args=['sudo', 'service', 'supervisord', 'restart'])
-    api_node.run(args=['sudo',  'supervisorctl', 'restart', 'all'])
+
+    api_node.run(args=['sudo', 'systemctl', 'restart', 'calamari.service'])
 
     api_node.run(args=['cd', 'api-tests/ceph-qe-scripts/calamari/api_test_cases',
                        run.Raw(';'), run.Raw('sh run_calamari_tests.sh')], timeout=600)
