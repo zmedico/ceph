@@ -36,14 +36,6 @@ tasks:
       roles:
        - mon.a
        - mon.b
-  - rbd_fio:
-       client.0:
-         fio-io-size: 90%
-         formats: [2]
-         features: [[layering],[layering,exclusive-lock,object-map]]
-         io-engine: sync
-         rw: randrw
-         runtime: 900
   - workunit:
       branch: jewel
       clients:
