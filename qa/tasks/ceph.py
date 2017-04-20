@@ -992,7 +992,7 @@ def osd_scrub_pgs(ctx, config):
     """
     retries = 12
     delays = 10
-    cluster_name = config['cluster']
+    cluster_name = config.get('cluster', 'ceph')
     manager = ctx.managers[cluster_name]
     all_clean = False
     for _ in range(0, retries):
