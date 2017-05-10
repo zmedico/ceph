@@ -372,7 +372,7 @@ def cluster(ctx, config):
         yield
 
     testdir = teuthology.get_testdir(ctx)
-    cluster_name = config['cluster']
+    cluster_name = config.get('cluster', 'ceph')
     data_dir = '{tdir}/{cluster}.data'.format(tdir=testdir, cluster=cluster_name)
     log.info('Creating ceph cluster %s...', cluster_name)
     run.wait(
