@@ -38,7 +38,6 @@ you may write data with one API and retrieve it with the other.
 
    Manual Install w/Civetweb <../../install/install-ceph-gateway>
    Simple Configuration w/Apache/FastCGI <config-fcgi>
-   Federated Configuration (Deprecated) <federated-config>
    Multisite Configuration <multisite>
    Config Reference <config-ref>
    Admin Guide <admin>
