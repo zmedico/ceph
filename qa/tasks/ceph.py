@@ -471,8 +471,7 @@ def cluster(ctx, config):
     keyring_path = config.get('keyring_path', default_keyring)
 
     coverage_dir = '{tdir}/archive/coverage'.format(tdir=testdir)
-    import pdb
-    pdb.set_trace()
+    log.info('cluster name %s' % cluster_name)
     firstmon = teuthology.get_first_mon(ctx, config, cluster_name)
 
     log.info('Setting up %s...' % firstmon)
