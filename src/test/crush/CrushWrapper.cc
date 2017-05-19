@@ -1054,10 +1054,8 @@ TEST(CrushWrapper, choose_args_compat) {
   crush_weight_set weight_set;
   weight_set.size = 1;
   weight_set.weights = &weights;
-  int maxbuckets = c.get_max_buckets();
-  assert(maxbuckets > 0);
-  crush_choose_arg choose_args[maxbuckets];
-  memset(choose_args, '\0', sizeof(crush_choose_arg) * maxbuckets);
+  crush_choose_arg choose_args[c.get_max_buckets()];
+  memset(choose_args, '\0', sizeof(crush_choose_arg) * c.get_max_buckets());
   choose_args[-1-id].ids_size = 0;
   choose_args[-1-id].weight_set_size = 1;
   choose_args[-1-id].weight_set = &weight_set;
