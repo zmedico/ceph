@@ -80,8 +80,12 @@ def task(ctx, config):
     setup_dnsmasq(rgw_node, dnsmasq_name)
     fix_rgw_config(rgw_node, dnsmasq_name)
     setup_user_bucket(rgw_node, dnsmasq_name, access_key, secret_key, bucket_name, testdir)
+    if hadoop_ver.startswith('2.8'):
+        test_options = '-Dit.test=ITestS3A* -Dscale -Dfs.s3a.scale.test.huge.filesize=128M verify'
+    else:
+        test_options = 'test -Dtest=S3a*,TestS3A*'
     try:
-        run_s3atest(rgw_node, maven_version, testdir)
+        run_s3atest(rgw_node, maven_version, testdir, test_options)
         yield
     finally:
         log.info("Done s3a testing, Cleaning up")
@@ -242,7 +246,7 @@ for bucket in conn.get_all_buckets():
     )
 
 
-def run_s3atest(client, maven_version, testdir):
+def run_s3atest(client, maven_version, testdir, test_options):
     """
     Finally run the s3a test
     """
@@ -254,7 +258,7 @@ def run_s3atest(client, maven_version, testdir):
             run.Raw(aws_testdir),
             run.Raw('&&'),
             run.Raw(run_test),
-            run.Raw('test -Dtest=S3a*,TestS3A*')
+            run.Raw(test_options)
         ]
     )
 
