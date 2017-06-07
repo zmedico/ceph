@@ -64,9 +64,33 @@ void randomize_rng(const int n, MutexT& m)
  detail::engine<EngineT>().seed(n);
 }
 
+template <typename EngineT = std::default_random_engine>
+void randomize_rng(const int n)
+{
+ detail::engine<EngineT>().seed(n);
+}
+
+template <typename EngineT = std::default_random_engine>
+void randomize_rng()
+{
+ thread_local std::random_device rd;
+ detail::engine<EngineT>().seed(rd());
+}
 } // namespace detail
 
 namespace detail {
+
+template <typename NumberT,
+          typename DistributionT,
+          typename EngineT>
+NumberT generate_random_number(const NumberT min, const NumberT max,
+                               EngineT& e)
+{
+ thread_local DistributionT d { min, max };
+
+ using param_type = typename DistributionT::param_type;
+ return d(e, param_type { min, max });
+}
 
 template <typename NumberT,
           typename MutexT,
@@ -95,13 +119,12 @@ NumberT generate_random_number(const NumberT min, const NumberT max,
 }
 
 template <typename NumberT,
-          typename MutexT,
           typename DistributionT,
           typename EngineT>
 NumberT generate_random_number(const NumberT min, const NumberT max)
 {
- thread_local std::mutex m;
- return generate_random_number<DistributionT, EngineT>(min, max, m);
+ return detail::generate_random_number<NumberT, DistributionT, EngineT>
+         (min, max, detail::engine<EngineT>());
 }
 
 } // namespace detail
@@ -109,8 +132,7 @@ NumberT generate_random_number(const NumberT min, const NumberT max)
 template <typename EngineT = std::default_random_engine>
 void randomize_rng()
 {
- thread_local std::mutex m;
- detail::randomize_rng<decltype(m), EngineT>(m);
+ detail::randomize_rng<EngineT>();
 }
 
 template <typename MutexT, typename EngineT = std::default_random_engine>
@@ -122,8 +144,7 @@ void randomize_rng(MutexT& m)
 template <typename EngineT = std::default_random_engine>
 void randomize_rng(const int seed)
 {
- thread_local std::mutex m;
- detail::randomize_rng<decltype(m), EngineT>(seed, m);
+ detail::randomize_rng<EngineT>(seed);
 }
 
 template <typename MutexT,
@@ -173,10 +194,8 @@ template <int min = 0,
           typename EngineT = std::default_random_engine>
 int generate_random_number()
 {
- thread_local std::mutex m;
-
- return detail::generate_random_number<int, decltype(m), DistributionT, EngineT>
-        (min, max, m);
+ return detail::generate_random_number<int, DistributionT, EngineT>
+        (min, max);
 }
 
 template <typename IntegerT, typename MutexT>
@@ -193,8 +212,10 @@ template <typename IntegerT>
 IntegerT generate_random_number(const IntegerT min, const IntegerT max,
                                 typename std::enable_if<std::is_integral<IntegerT>::value>::type* = nullptr)
 {
- thread_local std::mutex m;
- return generate_random_number(min, max, m); 
+ return detail::generate_random_number<IntegerT,
+                                       std::uniform_int_distribution<IntegerT>,
+                                       std::default_random_engine>
+                                      (min, max); 
 }
 
 template <typename IntegerT, typename MutexT>
@@ -251,11 +272,10 @@ template <typename RealT>
 RealT generate_random_number(const RealT min, const RealT max, 
                              typename std::enable_if<std::is_floating_point<RealT>::value>::type* = nullptr)
 {
- thread_local std::mutex m;
- return detail::generate_random_number<RealT, decltype(m),
+ return detail::generate_random_number<RealT,
                                        std::uniform_real_distribution<RealT>, 
                                        std::default_random_engine>
-                                      (min, max, m);
+                                      (min, max);
 }
 
 template <typename RealT, typename MutexT>
@@ -291,10 +311,7 @@ RealT generate_random_number(const RealT max,
                              typename std::enable_if<std::is_floating_point<RealT>::value>::type* = nullptr)
 {
  constexpr RealT zero = 0.0;
-
- thread_local std::mutex m;
-
- return generate_random_number(zero, max, m);
+ return generate_random_number(zero, max);
 }
 
 // Convenience functions:
