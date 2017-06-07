@@ -141,29 +141,10 @@ void randomize_rng(MutexT& m)
  detail::randomize_rng<MutexT, EngineT>(m);
 }
 
-template <typename EngineT = std::default_random_engine>
-void randomize_rng(const int seed)
-{
- detail::randomize_rng<EngineT>(seed);
-}
-
-template <typename MutexT,
-          typename EngineT = std::default_random_engine>
-void randomize_rng(const int seed, MutexT& m)
-{
- detail::randomize_rng<MutexT, EngineT>(seed, m);
-}
-
 template <typename MutexT, typename EngineT>
 void randomize_rng(MutexT& m, EngineT& e)
 {
  return detail::randomize_rng(m, e);
-}
-
-template <typename MutexT, typename EngineT>
-void randomize_rng(const int seed, MutexT& m, EngineT& e)
-{
- return detail::randomize_rng(seed, m, e);
 }
 
 // Generate a random number between 0 and maxint:
@@ -381,7 +362,7 @@ class random_number_generator final
 
  random_number_generator(const int seed)
  {
-    ceph::util::randomize_rng(seed, l, e);
+    detail::randomize_rng(seed, l, e);
  }
 
  public:
@@ -398,7 +379,7 @@ class random_number_generator final
  NumberT operator()(const NumberT min, const NumberT max)   { return generate_random_number(min, max, l, e); }
 
  public:
- void seed(const int n) { randomize_rng(n, l, e); }
+ void seed(const int n) { detail::randomize_rng(n, l, e); }
 };
 
 } // inline namespace version_2017_0

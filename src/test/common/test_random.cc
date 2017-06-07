@@ -64,22 +64,23 @@ TEST(util, test_random_canonical)
  auto gen_f = ceph::util::make_random_number_function<1, 20>();
  auto x = gen_f();
 
+ // Same, with seed (no re-seeding is possible):
+ auto gen_g = ceph::util::make_random_number_function<1, 20, 42>();
+ auto y = gen_g();
+
  // Make a function object RNG suitable for putting on its own thread:
- auto gen_fo = ceph::util::random_number_generator<int>();
- auto y = gen_fo();
- gen_fo.seed(42);   // re-seed
+ auto gen_fn = ceph::util::random_number_generator<int>();
+ auto z = gen_fn();
+ gen_fn.seed(42);   // re-seed
 
  // Mostly to swallow "unused variable" warnings:
- ASSERT_EQ(true, none_equal(a, b, c, d, e, x, y));
+ ASSERT_EQ(true, none_equal(a, b, c, d, e, x, y, z));
 }
 
 TEST(util, test_random)
 {
  /* The intent of this test is not to formally test random number generation, but rather to
  casually check that "it works" and catch regressions: */
-
- // Overload taking an int should compile:
- ceph::util::randomize_rng(42);
 
  // The default overload should compile:
  ceph::util::randomize_rng();
@@ -154,7 +155,6 @@ TEST(util, test_user_mutex)
  std::mutex l;
 
  ceph::util::randomize_rng(l);
- ceph::util::randomize_rng(123, l);
 
  ceph::util::generate_random_number(l);
 
@@ -180,8 +180,6 @@ TEST(util, test_random_user_rng_lock)
  std::mt19937_64 e;
 
  ceph::util::randomize_rng(l, e);
-
- ceph::util::randomize_rng(123, l, e);
 
  ceph::util::generate_random_number(l, e);
 
