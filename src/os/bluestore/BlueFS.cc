@@ -1554,7 +1554,11 @@ int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
     dout(20) << __func__ << " using partial tail 0x"
              << std::hex << partial << std::dec << dendl;
     assert(h->tail_block.length() == partial);
-    bl.claim_append(h->tail_block);
+    for (std::list<buffer::ptr>::const_iterator i = h->tail_block.buffers().begin();
+	i != h->tail_block.buffers().end(); i++) {
+      bl.append(*i, 0, i->length());
+    }
+    h->tail_block.clear();
     x_off -= partial;
     offset -= partial;
     length += partial;
@@ -1566,11 +1570,20 @@ int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
     }
   }
   if (length == partial + h->buffer.length()) {
-    bl.claim_append(h->buffer);
+    for (std::list<buffer::ptr>::const_iterator i = h->buffer.buffers().begin();
+	i != h->buffer.buffers().end(); i++) {
+      bl.append(*i, 0, i->length());
+    }
+    h->buffer.clear();
   } else {
+    uint32_t len = length;
+    for (std::list<buffer::ptr>::const_iterator i = h->buffer.buffers().begin();
+	len && i != h->buffer.buffers().end(); i++) {
+      uint32_t l = i->length() < len ? i->length() : len;
+      bl.append(*i, 0, l);
+      len -= l;
+    }
     bufferlist t;
-    t.substr_of(h->buffer, 0, length);
-    bl.claim_append(t);
     t.substr_of(h->buffer, length, h->buffer.length() - length);
     h->buffer.swap(t);
     dout(20) << " leaving 0x" << std::hex << h->buffer.length() << std::dec
