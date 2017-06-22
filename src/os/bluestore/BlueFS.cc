@@ -1,6 +1,9 @@
 // -*- mode:C++; tab-width:8; c-basic-offset:2; indent-tabs-mode:t -*-
 // vim: ts=8 sw=2 smarttab
 
+#include <fstream>
+#include <iostream>
+
 #include "boost/algorithm/string.hpp" 
 #include "BlueFS.h"
 
@@ -16,14 +19,38 @@
 #undef dout_prefix
 #define dout_prefix *_dout << "bluefs "
 
-MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::File, bluefs_file, bluefs);
-MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::Dir, bluefs_dir, bluefs);
+//MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::File, bluefs_file, bluefs);
+//MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::Dir, bluefs_dir, bluefs);
 MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileWriter, bluefs_file_writer, bluefs);
-MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileReaderBuffer,
-			      bluefs_file_reader_buffer, bluefs);
-MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileReader, bluefs_file_reader, bluefs);
-MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileLock, bluefs_file_lock, bluefs);
+/*MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileReaderBuffer,
+			      bluefs_file_reader_buffer, bluefs);*/
+//MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileReader, bluefs_file_reader, bluefs);
+//MEMPOOL_DEFINE_OBJECT_FACTORY(BlueFS::FileLock, bluefs_file_lock, bluefs);
 
+
+static uint64_t get_mem_use(const char* msg)
+{
+  std::ifstream ifs;
+  ifs.open("/proc/self/status");
+  const char* mem_use_keyword="VmRSS:";
+  uint64_t mem_use = 0;
+  while(!ifs.eof()){
+    char s[256];
+    ifs.getline(s, sizeof(s));
+    char* name = strstr(s, mem_use_keyword);
+    if ( name != nullptr) {
+      //cout << msg << s << std::endl;
+      name += strlen(mem_use_keyword);
+      mem_use = strtol(name, nullptr, 10);
+      mem_use <<= 10; // * 1024
+    }
+  }
+  ifs.close();
+  return mem_use;
+}
+
+
+std::atomic<uint64_t> tttotal;
 
 BlueFS::BlueFS(CephContext* cct)
   : cct(cct),
@@ -443,6 +470,16 @@ void BlueFS::umount()
   dir_map.clear();
   super = bluefs_super_t();
   log_t.clear();
+
+   ostringstream ostr;
+   Formatter* f = Formatter::create("json-pretty", "json-pretty", "json-pretty");
+   dump_perf_counters(f);
+
+   f->flush(ostr);
+   delete f;
+   dout(1) << "BLUEFS " << tttotal << " " << ostr.str() << dendl;
+
+
   _shutdown_logger();
 }
 
@@ -1118,7 +1155,8 @@ void BlueFS::_compact_log_sync()
   uint64_t need = bl.length() + cct->_conf->bluefs_max_log_runway;
   dout(20) << __func__ << " need " << need << dendl;
 
-  mempool::bluefs::vector<bluefs_extent_t> old_extents;
+  //mempool::bluefs::vector<bluefs_extent_t> old_extents;
+  vector<bluefs_extent_t> old_extents;
   old_extents.swap(log_file->fnode.extents);
   log_file->fnode.recalc_allocated();
   while (log_file->fnode.get_allocated() < need) {
@@ -1248,7 +1286,8 @@ void BlueFS::_compact_log_async(std::unique_lock<std::mutex>& l)
   dout(10) << __func__ << " remove 0x" << std::hex << old_log_jump_to << std::dec
 	   << " of " << log_file->fnode.extents << dendl;
   uint64_t discarded = 0;
-  mempool::bluefs::vector<bluefs_extent_t> old_extents;
+  vector<bluefs_extent_t> old_extents;
+  //mempool::bluefs::vector<bluefs_extent_t> old_extents;
   while (discarded < old_log_jump_to) {
     assert(!log_file->fnode.extents.empty());
     bluefs_extent_t& e = log_file->fnode.extents.front();
@@ -1450,7 +1489,7 @@ int BlueFS::_flush_and_sync_log(std::unique_lock<std::mutex>& l,
 
 int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
 {
-  dout(10) << __func__ << " " << h << " pos 0x" << std::hex << h->pos
+  dout(0) << __func__ << " " << h << " pos 0x" << std::hex << h->pos
 	   << " 0x" << offset << "~" << length << std::dec
 	   << " to " << h->file->fnode << dendl;
   assert(!h->file->deleted);
@@ -1623,7 +1662,7 @@ int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
       if (h->file->fnode.ino > 1) {
 	// we are using the page_aligned_appender, and can safely use
 	// the tail of the raw buffer.
-	const bufferptr &last = t.back();
+	/*const bufferptr &last = t.back();
 	if (last.unused_tail_length() < zlen) {
 	  derr << " wtf, last is " << last << " from " << t << dendl;
 	  assert(last.unused_tail_length() >= zlen);
@@ -1632,7 +1671,8 @@ int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
 	z.set_offset(last.offset() + last.length());
 	z.set_length(zlen);
 	z.zero();
-	t.append(z, 0, zlen);
+	t.append(z, 0, zlen);*/
+        t.append_zero(zlen);
       } else {
 	t.append_zero(zlen);
       }
@@ -1655,6 +1695,7 @@ int BlueFS::_flush_range(FileWriter *h, uint64_t offset, uint64_t length)
       }
     }
   }
+  _flush_bdev_safely(h);
   dout(20) << __func__ << " h " << h << " pos now 0x"
            << std::hex << h->pos << std::dec << dendl;
   return 0;
@@ -1690,6 +1731,7 @@ void BlueFS::wait_for_aio(FileWriter *h)
 
 int BlueFS::_flush(FileWriter *h, bool force)
 {
+
   h->buffer_appender.flush();
   uint64_t length = h->buffer.length();
   uint64_t offset = h->pos;
@@ -1753,9 +1795,14 @@ int BlueFS::_truncate(FileWriter *h, uint64_t offset)
   return 0;
 }
 
+void BlueFS::appended(FileWriter *h, size_t sz, uint64_t a, uint64_t p)
+{
+//  dout(0) << __func__ << " " << h << " " << sz << " A="<<a<<" P="<<p<<dendl;
+}
+
 int BlueFS::_fsync(FileWriter *h, std::unique_lock<std::mutex>& l)
 {
-  dout(10) << __func__ << " " << h << " " << h->file->fnode << dendl;
+  dout(0) << __func__ << " " << h << " " << h->file->fnode << dendl;
   int r = _flush(h, true);
   if (r < 0)
      return r;
@@ -1781,6 +1828,11 @@ void BlueFS::_flush_bdev_safely(FileWriter *h)
     _claim_completed_aios(h, &completed_ios);
     lock.unlock();
     wait_for_aio(h);
+
+     for (auto& p : completed_ios) {
+        tttotal += p.bl.length();
+      }
+
     completed_ios.clear();
     flush_bdev();
     lock.lock();
@@ -1801,8 +1853,10 @@ void BlueFS::flush_bdev()
   }
 }
 
+//int BlueFS::_allocate(uint8_t id, uint64_t len,
+//		      mempool::bluefs::vector<bluefs_extent_t> *ev)
 int BlueFS::_allocate(uint8_t id, uint64_t len,
-		      mempool::bluefs::vector<bluefs_extent_t> *ev)
+		      vector<bluefs_extent_t> *ev)
 {
   dout(10) << __func__ << " len 0x" << std::hex << len << std::dec
            << " from " << (int)id << dendl;
@@ -2010,13 +2064,14 @@ int BlueFS::open_for_write(
     }
   }
 
-  dout(10) << __func__ << " h " << *h << " on " << file->fnode << dendl;
+  dout(1) << __func__ << " h " << *h << " on " << file->fnode << dendl;
   return 0;
 }
 
 BlueFS::FileWriter *BlueFS::_create_writer(FileRef f)
 {
   FileWriter *w = new FileWriter(f);
+  dout(0) << __func__ << " " << w << " type " << w->writer_type << dendl;
   for (unsigned i = 0; i < MAX_BDEV; ++i) {
     if (bdev[i]) {
       w->iocv[i] = new IOContext(cct, NULL);
@@ -2029,14 +2084,37 @@ BlueFS::FileWriter *BlueFS::_create_writer(FileRef f)
 
 void BlueFS::_close_writer(FileWriter *h)
 {
-  dout(10) << __func__ << " " << h << " type " << h->writer_type << dendl;
+//  _flush_bdev_safely(h);
+//derr<<"close_prior: "<<h<<" "<<get_mem_use("4:")<<dendl;
+  size_t running = 0, pending = 0;
+  uint64_t total=0;
   for (unsigned i=0; i<MAX_BDEV; ++i) {
     if (bdev[i]) {
       assert(h->iocv[i]);
+      running += h->iocv[i]->running_aios.size();
+      pending += h->iocv[i]->pending_aios.size();
+
+      for (auto& p : h->iocv[i]->running_aios) {
+        for( auto &b : p.bl.buffers()) {
+          total += b.raw_length();
+        }
+      }
+      for (auto& p : h->iocv[i]->pending_aios) {
+        total += p.bl.length();
+      }
+
+//  dout(1) << __func__ <<" on " << h->file->fnode << " " << i << " " << h->iocv[i]->running_aios.size() << dendl;
+
       h->iocv[i]->aio_wait();
       bdev[i]->queue_reap_ioc(h->iocv[i]);
     }
   }
+//  derr<<"close_after: "<<h<<" "<<get_mem_use("4:")<<dendl;
+  dout(0) << __func__ << " " << h << " type " << h->writer_type 
+    << " total = " << total
+    << " p=" << pending 
+    << " r=" << running 
+    << dendl;
   delete h;
 }
 
@@ -2204,7 +2282,7 @@ int BlueFS::lock_file(const string& dirname, const string& filename,
   map<string,FileRef>::iterator q = dir->file_map.find(filename);
   File *file;
   if (q == dir->file_map.end()) {
-    dout(20) << __func__ << " dir " << dirname << " (" << dir
+    dout(1) << __func__ << " dir " << dirname << " (" << dir
 	     << ") file " << filename
 	     << " not found, creating" << dendl;
     file = new File;

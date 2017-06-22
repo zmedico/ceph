@@ -162,6 +162,10 @@ class BlueRocksWritableFile : public rocksdb::WritableFile {
 
   rocksdb::Status Append(const rocksdb::Slice& data) override {
     h->append(data.data(), data.size());
+    fs->appended(h, data.size(), h->appended, h->pos);
+    if ((h->appended - h->pos) >= 4 * 1024 * 1024) {
+      Sync();
+    }
     return rocksdb::Status::OK();
   }
 

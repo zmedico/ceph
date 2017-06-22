@@ -82,7 +82,9 @@ ostream& operator<<(ostream& out, const bluefs_super_t& s)
 
 // bluefs_fnode_t
 
-mempool::bluefs::vector<bluefs_extent_t>::iterator bluefs_fnode_t::seek(
+//mempool::bluefs::vector<bluefs_extent_t>::iterator bluefs_fnode_t::seek(
+//  uint64_t offset, uint64_t *x_off)
+vector<bluefs_extent_t>::iterator bluefs_fnode_t::seek(
   uint64_t offset, uint64_t *x_off)
 {
   auto p = extents.begin();

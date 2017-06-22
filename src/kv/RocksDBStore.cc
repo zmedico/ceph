@@ -301,12 +301,15 @@ int RocksDBStore::do_open(ostream &out, bool create_if_missing)
   if (!cache_size) {
     cache_size = g_conf->rocksdb_cache_size;
   }
+cache_size = 0;
   uint64_t row_cache_size = cache_size * g_conf->rocksdb_cache_row_ratio;
   uint64_t block_cache_size = cache_size - row_cache_size;
+derr<<"rocksdb cache = " << block_cache_size << " " << row_cache_size<<dendl;
   if (g_conf->rocksdb_cache_type == "lru") {
-    bbt_opts.block_cache = rocksdb::NewLRUCache(
-      block_cache_size,
-      g_conf->rocksdb_cache_shard_bits);
+    if( cache_size)
+      bbt_opts.block_cache = rocksdb::NewLRUCache(
+        block_cache_size,
+        g_conf->rocksdb_cache_shard_bits);
   } else if (g_conf->rocksdb_cache_type == "clock") {
     bbt_opts.block_cache = rocksdb::NewClockCache(
       block_cache_size,
@@ -318,7 +321,8 @@ int RocksDBStore::do_open(ostream &out, bool create_if_missing)
   }
   bbt_opts.block_size = g_conf->rocksdb_block_size;
 
-  opt.row_cache = rocksdb::NewLRUCache(row_cache_size,
+  if( cache_size)
+    opt.row_cache = rocksdb::NewLRUCache(row_cache_size,
 				       g_conf->rocksdb_cache_shard_bits);
 
   if (g_conf->kstore_rocksdb_bloom_bits_per_key > 0) {
@@ -478,10 +482,10 @@ int RocksDBStore::submit_transaction(KeyValueDB::Transaction t)
   utime_t start = ceph_clock_now();
   // enable rocksdb breakdown
   // considering performance overhead, default is disabled
-  if (g_conf->rocksdb_perf) {
+/*  if (g_conf->rocksdb_perf) {
     rocksdb::SetPerfLevel(rocksdb::PerfLevel::kEnableTimeExceptForMutex);
     rocksdb::perf_context.Reset();
-  }
+  }*/
 
   RocksDBTransactionImpl * _t =
     static_cast<RocksDBTransactionImpl *>(t.get());
@@ -501,7 +505,7 @@ int RocksDBStore::submit_transaction(KeyValueDB::Transaction t)
   }
   utime_t lat = ceph_clock_now() - start;
 
-  if (g_conf->rocksdb_perf) {
+/*  if (g_conf->rocksdb_perf) {
     utime_t write_memtable_time;
     utime_t write_delay_time;
     utime_t write_wal_time;
@@ -519,7 +523,7 @@ int RocksDBStore::submit_transaction(KeyValueDB::Transaction t)
     logger->tinc(l_rocksdb_write_wal_time, write_wal_time);
     logger->tinc(l_rocksdb_write_pre_and_post_process_time, write_pre_and_post_process_time);
   }
-
+*/
   logger->inc(l_rocksdb_txns);
   logger->tinc(l_rocksdb_submit_latency, lat);
 
@@ -531,10 +535,10 @@ int RocksDBStore::submit_transaction_sync(KeyValueDB::Transaction t)
   utime_t start = ceph_clock_now();
   // enable rocksdb breakdown
   // considering performance overhead, default is disabled
-  if (g_conf->rocksdb_perf) {
+/*  if (g_conf->rocksdb_perf) {
     rocksdb::SetPerfLevel(rocksdb::PerfLevel::kEnableTimeExceptForMutex);
     rocksdb::perf_context.Reset();
-  }
+  }*/
 
   RocksDBTransactionImpl * _t =
     static_cast<RocksDBTransactionImpl *>(t.get());
@@ -555,7 +559,7 @@ int RocksDBStore::submit_transaction_sync(KeyValueDB::Transaction t)
   }
   utime_t lat = ceph_clock_now() - start;
 
-  if (g_conf->rocksdb_perf) {
+/*  if (g_conf->rocksdb_perf) {
     utime_t write_memtable_time;
     utime_t write_delay_time;
     utime_t write_wal_time;
@@ -572,7 +576,7 @@ int RocksDBStore::submit_transaction_sync(KeyValueDB::Transaction t)
     logger->tinc(l_rocksdb_write_delay_time, write_delay_time);
     logger->tinc(l_rocksdb_write_wal_time, write_wal_time);
     logger->tinc(l_rocksdb_write_pre_and_post_process_time, write_pre_and_post_process_time);
-  }
+  }*/
 
   logger->inc(l_rocksdb_txns_sync);
   logger->tinc(l_rocksdb_submit_sync_latency, lat);

@@ -111,7 +111,7 @@ void BlockDevice::reap_ioc()
   if (ioc_reap_count.load()) {
     std::lock_guard<std::mutex> l(ioc_reap_lock);
     for (auto p : ioc_reap_queue) {
-      dout(20) << __func__ << " reap ioc " << p << dendl;
+      dout(1) << __func__ << " reap ioc " << p << dendl;
       delete p;
     }
     ioc_reap_queue.clear();

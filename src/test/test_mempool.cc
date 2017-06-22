@@ -15,6 +15,8 @@
  */
 
 #include <stdio.h>
+#include <iostream>
+#include <fstream>
 
 #include "global/global_init.h"
 #include "common/ceph_argparse.h"
@@ -39,6 +41,103 @@ void check_usage(mempool::pool_index_t ix)
     jf.flush(std::cout);
   }
   EXPECT_EQ(sum, usage);
+}
+
+uint64_t get_mem_use(const char* msg)
+{
+  std::ifstream ifs;
+  ifs.open("/proc/self/status");
+  const char* mem_use_keyword="VmRSS:";
+  uint64_t mem_use = 0;
+  while(!ifs.eof()){
+    char s[256];
+    ifs.getline(s, sizeof(s));
+    char* name = strstr(s, mem_use_keyword);
+    if ( name != nullptr) {
+      cout << msg << s << std::endl;
+      name += strlen(mem_use_keyword);
+      mem_use = strtol(name, nullptr, 10);
+      mem_use <<= 10; // * 1024
+    }
+  }
+  ifs.close();
+  return mem_use;
+}
+
+TEST(mempool, align_overhead)
+{
+  vector <bufferlist*> allocs;
+
+  size_t bsize = 0x1000;
+  size_t alloc_count = 0x400000; // allocate 16 Gb total
+ allocs.resize(alloc_count);
+  uint64_t mem_use_before = get_mem_use("Mem before: ");
+  for( auto i = 0u; i < alloc_count; ++i) {
+    bufferptr p = buffer::create_page_aligned(bsize);
+    bufferlist* bl = new bufferlist;
+    bl->append(p);
+    *(bl->c_str()) = 0; // touch the page to increment system mem use
+    allocs[i] = bl;
+  }
+  uint64_t mem_use_after = get_mem_use("Mem after: ");
+  uint64_t used = mem_use_after - mem_use_before;
+  uint64_t bytes = mempool::buffer_anon::allocated_bytes();
+  cout << "Mem actually used: " << used << " bytes" << std::endl;
+  cout << "Mem pool reports: " << bytes << " bytes" << std::endl;
+
+  for( auto i = 0u; i < alloc_count; i+=2) {
+    delete allocs[i];
+  }
+  allocs.clear();
+
+  mem_use_before = get_mem_use("Mem before1-2: ");
+  for( auto i = 0u; i < alloc_count; ++i) {
+    bufferptr p = buffer::create_page_aligned(bsize);
+    bufferlist* bl = new bufferlist;
+    bl->append(p);
+    *(bl->c_str()) = 0; // touch the page to increment system mem use
+    allocs[i] = bl;
+  }
+  mem_use_after = get_mem_use("Mem after1-2: ");
+  used = mem_use_after - mem_use_before;
+  bytes = mempool::buffer_anon::allocated_bytes();
+  cout << "Mem actually used: " << used << " bytes" << std::endl;
+  cout << "Mem pool reports: " << bytes << " bytes" << std::endl;
+
+  for( auto i = 0u; i < alloc_count; ++i) {
+    delete allocs[i];
+  }
+  allocs.clear();
+
+  mem_use_before = get_mem_use("Mem before2: ");
+
+  struct fake_raw_posix_aligned{
+    char stub[8];
+    void* data;
+    fake_raw_posix_aligned() {
+      ::posix_memalign(&data, 0x1000, 0x1000); //mempool::buffer_data::alloc_char.allocate_aligned(0x1000, 0x1000);
+      *((char*)data) = 0; // touch the page
+    }
+    ~fake_raw_posix_aligned() {
+      ::free(data);
+    }
+  };
+
+  vector <fake_raw_posix_aligned*> allocs2;
+  allocs2.resize(alloc_count);
+  for( auto i = 0u; i < alloc_count; ++i) {
+    allocs2[i] = new fake_raw_posix_aligned();
+  }
+  mem_use_after = get_mem_use("Mem after2: ");
+  used = mem_use_after - mem_use_before;
+//  uint64_t bytes = mempool::buffer_data::allocated_bytes();
+  cout << "Mem actually used: " << used << " bytes" << std::endl;
+//  cout << "Mem pool reports: " << bytes << " bytes" << std::endl;
+
+  for( auto i = 0u; i < alloc_count; ++i) {
+    delete allocs2[i];
+  }
+  allocs2.clear();
 }
 
 template<typename A, typename B>

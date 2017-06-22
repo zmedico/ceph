@@ -53,7 +53,7 @@ public:
   };
 
   struct File : public RefCountedObject {
-    MEMPOOL_CLASS_HELPERS();
+//    MEMPOOL_CLASS_HELPERS();
 
     bluefs_fnode_t fnode;
     int refs;
@@ -99,9 +99,10 @@ public:
 	&File::dirty_item> > dirty_file_list_t;
 
   struct Dir : public RefCountedObject {
-    MEMPOOL_CLASS_HELPERS();
+//    MEMPOOL_CLASS_HELPERS();
 
-    mempool::bluefs::map<string,FileRef> file_map;
+//    mempool::bluefs::map<string,FileRef> file_map;
+    map<string,FileRef> file_map;
 
     Dir() : RefCountedObject(NULL, 0) {}
 
@@ -123,6 +124,7 @@ public:
     bufferlist tail_block;  ///< existing partial block at end of file, if any
     bufferlist::page_aligned_appender buffer_appender;  //< for const char* only
     int writer_type = 0;    ///< WRITER_*
+    uint64_t appended = 0;
 
     std::mutex lock;
     std::array<IOContext*,MAX_BDEV> iocv; ///< for each bdev
@@ -144,12 +146,19 @@ public:
     // to use buffer_appender exclusively here (e.g., it's notion of
     // offset will remain accurate).
     void append(const char *buf, size_t len) {
-      buffer_appender.append(buf, len);
+      buffer.append(buf, len);
+      appended += len;
+      //buffer_appender.append(buf, len);
+      /*bufferlist tmp;
+      tmp.append(buf, len);
+      tmp.append_zero(1024*1024 - len);
+      buffer.claim_append(tmp);*/
     }
 
     // note: used internally only, for ino 1 or 0.
     void append(bufferlist& bl) {
       buffer.claim_append(bl);
+      appended += bl.length();
     }
 
     uint64_t get_effective_write_pos() {
@@ -159,7 +168,7 @@ public:
   };
 
   struct FileReaderBuffer {
-    MEMPOOL_CLASS_HELPERS();
+//    MEMPOOL_CLASS_HELPERS();
 
     uint64_t bl_off;        ///< prefetch buffer logical offset
     bufferlist bl;          ///< prefetch buffer
@@ -189,7 +198,7 @@ public:
   };
 
   struct FileReader {
-    MEMPOOL_CLASS_HELPERS();
+//    MEMPOOL_CLASS_HELPERS();
 
     FileRef file;
     FileReaderBuffer buf;
@@ -209,7 +218,7 @@ public:
   };
 
   struct FileLock {
-    MEMPOOL_CLASS_HELPERS();
+//    MEMPOOL_CLASS_HELPERS();
 
     FileRef file;
     explicit FileLock(FileRef f) : file(f) {}
@@ -221,8 +230,11 @@ private:
   PerfCounters *logger = nullptr;
 
   // cache
-  mempool::bluefs::map<string, DirRef> dir_map;              ///< dirname -> Dir
-  mempool::bluefs::unordered_map<uint64_t,FileRef> file_map; ///< ino -> File
+/*  mempool::bluefs::map<string, DirRef> dir_map;              ///< dirname -> Dir
+  mempool::bluefs::unordered_map<uint64_t,FileRef> file_map; ///< ino -> File*/
+
+  map<string, DirRef> dir_map;              ///< dirname -> Dir
+  unordered_map<uint64_t,FileRef> file_map; ///< ino -> File
 
   // map of dirty files, files of same dirty_seq are grouped into list.
   map<uint64_t, dirty_file_list_t> dirty_files;
@@ -267,8 +279,10 @@ private:
   FileRef _get_file(uint64_t ino);
   void _drop_link(FileRef f);
 
+//  int _allocate(uint8_t bdev, uint64_t len,
+//		mempool::bluefs::vector<bluefs_extent_t> *ev);
   int _allocate(uint8_t bdev, uint64_t len,
-		mempool::bluefs::vector<bluefs_extent_t> *ev);
+		vector<bluefs_extent_t> *ev);
   int _flush_range(FileWriter *h, uint64_t offset, uint64_t length);
   int _flush(FileWriter *h, bool force);
   int _fsync(FileWriter *h, std::unique_lock<std::mutex>& l);
@@ -407,6 +421,9 @@ public:
     std::unique_lock<std::mutex> l(lock);
     return _fsync(h, l);
   }
+
+  void appended(FileWriter *h, size_t sz, uint64_t a, uint64_t p);
+
   int read(FileReader *h, FileReaderBuffer *buf, uint64_t offset, size_t len,
 	   bufferlist *outbl, char *out) {
     // no need to hold the global lock here; we only touch h and

@@ -12,11 +12,16 @@
 #include <system_error>
 #include <vector>
 
+#include <utility>
+#include <fstream>
+#include <iostream>
+
 #include "os/ObjectStore.h"
 #include "global/global_init.h"
 #include "common/errno.h"
 #include "include/intarith.h"
 #include "include/stringify.h"
+#include "include/mempool.h"
 
 #include <fio.h>
 #include <optgroup.h>
@@ -56,6 +61,26 @@ static std::vector<fio_option> ceph_options{
   {} // fio expects a 'null'-terminated list
 };
 
+uint64_t get_mem_use(const char* msg)
+{
+  std::ifstream ifs;
+  ifs.open("/proc/self/status");
+  const char* mem_use_keyword="VmRSS:";
+  uint64_t mem_use = 0;
+  while(!ifs.eof()){
+    char s[256];
+    ifs.getline(s, sizeof(s));
+    char* name = strstr(s, mem_use_keyword);
+    if ( name != nullptr) {
+      cout << msg << s << std::endl;
+      name += strlen(mem_use_keyword);
+      mem_use = strtol(name, nullptr, 10);
+      mem_use <<= 10; // * 1024
+    }
+  }
+  ifs.close();
+  return mem_use;
+}
 
 /// global engine state shared between all jobs within the process. this
 /// includes g_ceph_context and the ObjectStore instance
@@ -87,10 +112,22 @@ struct Engine {
       ostringstream ostr;
       Formatter* f = Formatter::create("json-pretty", "json-pretty", "json-pretty");
       os->dump_perf_counters(f);
+
+      f->open_object_section("mempools");
+      mempool::dump(f);
+      f->close_section();
+
       f->flush(ostr);
       delete f;
-      os->umount();
       dout(0) << "FIO plugin " << ostr.str() << dendl;
+      uint64_t used = get_mem_use("Mem before: ");
+      dout(0) << "Mem actually used: " << used << " bytes" << dendl;
+      os->umount();
+      used = get_mem_use("Mem before: ");
+      dout(0) << "Mem actually used: " << used << " bytes" << dendl;
+      os.reset(nullptr);
+      used = get_mem_use("Mem before: ");
+      dout(0) << "Mem actually used after of dref: " << used << " bytes" << dendl;
     }
   }
 };
@@ -137,6 +174,8 @@ Engine::Engine(const thread_data* td) : ref_count(0)
 
 Engine::~Engine()
 {
+  auto used = get_mem_use("Mem before: ");
+   dout(0) << "Mem used in dtor: " << used << " bytes" << dendl;
   assert(!ref_count);
 }
 

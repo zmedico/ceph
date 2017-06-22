@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <fstream>
+#include <iostream>
 
 #include "include/cpp-btree/btree_set.h"
 
@@ -116,6 +118,27 @@ const string PREFIX_SHARED_BLOB = "X"; // u64 offset -> shared_blob_t
  * 'x'
  */
 #define EXTENT_SHARD_KEY_SUFFIX 'x'
+
+uint64_t get_mem_use(const char* msg)
+{
+  std::ifstream ifs;
+  ifs.open("/proc/self/status");
+  const char* mem_use_keyword="VmRSS:";
+  uint64_t mem_use = 0;
+  while(!ifs.eof()){
+    char s[256];
+    ifs.getline(s, sizeof(s));
+    char* name = strstr(s, mem_use_keyword);
+    if ( name != nullptr) {
+      //cout << msg << s << std::endl;
+      name += strlen(mem_use_keyword);
+      mem_use = strtol(name, nullptr, 10);
+      mem_use <<= 10; // * 1024
+    }
+  }
+  ifs.close();
+  return mem_use;
+}
 
 /*
  * string encoding in the key
@@ -3348,6 +3371,7 @@ BlueStore::BlueStore(CephContext *cct,
 
 BlueStore::~BlueStore()
 {
+  malloc_stats();
   for (auto f : finishers) {
     delete f;
   }
@@ -3364,6 +3388,7 @@ BlueStore::~BlueStore()
     delete i;
   }
   cache_shards.clear();
+  derr<<"~~~:"<<get_mem_use("4:")<<dendl;
 }
 
 const char **BlueStore::get_tracked_conf_keys() const
@@ -4380,8 +4405,9 @@ int BlueStore::_open_db(bool create)
       goto free_bluefs;
     }
     if (cct->_conf->bluestore_bluefs_env_mirror) {
-      rocksdb::Env *a = new BlueRocksEnv(bluefs);
-      rocksdb::Env *b = rocksdb::Env::Default();
+/*      rocksdb::Env *a = new BlueRocksEnv(bluefs);
+      rocksdb::Env *b = rocksdb::Env::Default();*/
+      env = rocksdb::Env::Default();
       if (create) {
 	string cmd = "rm -rf " + path + "/db " +
 	  path + "/db.slow " +
@@ -4389,7 +4415,7 @@ int BlueStore::_open_db(bool create)
 	int r = system(cmd.c_str());
 	(void)r;
       }
-      env = new rocksdb::EnvMirror(b, a, false, true);
+      //env = new rocksdb::EnvMirror(b, a, false, true);
     } else {
       env = new BlueRocksEnv(bluefs);
 
@@ -5038,8 +5064,10 @@ void BlueStore::set_cache_shards(unsigned num)
   }
 }
 
+#include <mcheck.h>
 int BlueStore::_mount(bool kv_only)
 {
+  mtrace();
   dout(1) << __func__ << " path " << path << dendl;
 
   {
@@ -5150,29 +5178,119 @@ int BlueStore::_mount(bool kv_only)
   return r;
 }
 
+
+
 int BlueStore::umount()
 {
   assert(mounted);
   dout(1) << __func__ << dendl;
 
+  struct mallinfo mi = mallinfo();
+  dout(0)<< __func__ <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+
+
   _osr_drain_all();
   _osr_unregister_all();
 
   mempool_thread.shutdown();
+  mi = mallinfo();
+  dout(0)<< __func__ << " after mempool shutdownb " <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
 
   dout(20) << __func__ << " stopping kv thread" << dendl;
   _kv_stop();
   _reap_collections();
-  _flush_cache();
-  dout(20) << __func__ << " closing" << dendl;
-
-  mounted = false;
   _close_alloc();
   _close_fm();
+
+  mi = mallinfo();
+  dout(0)<< __func__ << " flush cache " <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+  derr<<"db-prior "<<get_mem_use("1:")<<dendl;
   _close_db();
+  derr<<"db_after "<<get_mem_use("1:")<<dendl;
+  dout(20) << __func__ << " closing" << dendl;
+  mi = mallinfo();
+  dout(0)<< __func__ << " flush after cache " <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+
+  derr<<get_mem_use("1:")<<dendl;
+  mounted = false;
+  derr<<get_mem_use("2:")<<dendl;
+  mi = mallinfo();
+  dout(0)<< __func__ << " before close_db " <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+  _flush_cache();
+  derr<<get_mem_use("3:")<<dendl;
+  mi = mallinfo();
+  dout(0)<< __func__ << " after close_db " <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+
   _close_bdev();
   _close_fsid();
   _close_path();
+  derr<<get_mem_use("4:")<<dendl;
 
   if (cct->_conf->bluestore_fsck_on_umount) {
     int rc = fsck(cct->_conf->bluestore_fsck_on_umount_deep);
@@ -5183,6 +5301,21 @@ int BlueStore::umount()
       return -EIO;
     }
   }
+
+  mi = mallinfo();
+  dout(0)<< __func__ <<
+  "  arena " << (unsigned)mi.arena <<
+  "  ordblks " << (unsigned)mi.ordblks <<
+  "  smblks " << (unsigned)mi.smblks <<
+  "  hblks " << (unsigned)mi.hblks <<
+  "  hblkhd " << (unsigned)mi.hblkhd <<
+  "  usmblks " << (unsigned)mi.usmblks <<
+  "  fsmblks " << (unsigned)mi.fsmblks <<
+  "  uordblks " << (unsigned)mi.uordblks <<
+  "  fordblks " << (unsigned)mi.fordblks <<
+  "  keepcost " << (unsigned)mi.keepcost <<
+  dendl;
+  muntrace();
   return 0;
 }
 
