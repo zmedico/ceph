@@ -81,10 +81,7 @@ def task(ctx, config):
     setup_dnsmasq(rgw_node, dnsmasq_name)
     fix_rgw_config(rgw_node, dnsmasq_name)
     setup_user_bucket(rgw_node, dnsmasq_name, access_key, secret_key, bucket_name, testdir)
-    if hadoop_ver.startswith('2.8'):
-        test_options = '-Dit.test=ITestS3A* -Dparallel-tests -Dscale -Dfs.s3a.scale.test.huge.filesize=128M verify'
-    else:
-        test_options = 'test -Dtest=S3a*,TestS3A*'
+    test_options = '-Dit.test=ITestS3A* -Dparallel-tests -Dscale -Dfs.s3a.scale.test.huge.filesize=128M verify'
     try:
         run_s3atest(rgw_node, maven_version, testdir, test_options)
         yield
