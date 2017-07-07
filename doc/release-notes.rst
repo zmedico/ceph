@@ -18,8 +18,8 @@ Major Changes from Kraken
 
 - *General*:
 
-  * Ceph now has a simple, built-in web-based dashboard for monitoring
-    cluster status.  FIXME DOCS.
+  * Ceph now has a simple, built-in web-based `dashboard`_ for monitoring
+    cluster status.
 
 - *RADOS*:
 
@@ -232,7 +232,9 @@ Major Changes from Kraken
       these exist yet).
     - ``ceph tell <daemon> help`` will now return a usage summary.
 
+.. _dashboard: ../mgr/dashboard
 .. _Read more about EC overwrites: ../rados/operations/erasure-code/#erasure-coding-with-overwrites
+
 
 Major Changes from Jewel
 ------------------------
