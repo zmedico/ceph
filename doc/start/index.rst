@@ -1,5 +1,5 @@
 ======================
- Installation (Quick)
+ Installation (ceph-deploy)
 ======================
 
 .. raw:: html
