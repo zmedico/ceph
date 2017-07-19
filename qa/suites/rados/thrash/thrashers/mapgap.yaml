@@ -2,6 +2,7 @@ overrides:
   ceph:
     conf:
       mon:
+        mon warn on osd down out interval zero: false
         mon min osdmap epochs: 2
       osd:
         osd map cache size: 1

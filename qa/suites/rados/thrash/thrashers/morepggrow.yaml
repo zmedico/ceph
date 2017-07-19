@@ -2,6 +2,8 @@ tasks:
 - install:
 - ceph:
     conf:
+      mon:
+        mon warn on osd down out interval zero: false
       osd:
         osd max backfills: 1
         osd scrub min interval: 60
