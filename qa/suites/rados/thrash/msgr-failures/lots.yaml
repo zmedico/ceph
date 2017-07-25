@@ -2,6 +2,6 @@ overrides:
   ceph:
     conf:
       global:
-        ms inject socket failures: 5000
+        ms inject socket failures: 300
       osd:
         osd heartbeat use min delay socket: true

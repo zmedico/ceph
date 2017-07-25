@@ -19,8 +19,8 @@ tasks:
     conf:
       osd:
         osd debug reject backfill probability: .3
-        osd min pg log entries: 25
-        osd max pg log entries: 100
+        osd min pg log entries: 1
+        osd max pg log entries: 2
         osd max object name len: 460
         osd max object namespace len: 64
 - exec:

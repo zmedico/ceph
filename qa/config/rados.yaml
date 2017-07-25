@@ -6,3 +6,5 @@ overrides:
         osd op queue cut off: debug_random
         osd debug verify missing on start: true
         osd debug verify cached snaps: true
+        osd min pg log entries: 1
+        osd max pg log entries: 2

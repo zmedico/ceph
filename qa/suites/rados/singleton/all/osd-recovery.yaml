@@ -22,6 +22,7 @@ tasks:
       - (OBJECT_DEGRADED)
     conf:
       osd:
-        osd min pg log entries: 5
+        osd min pg log entries: 1
+        osd max pg log entries: 2
         osd_fast_fail_on_connection_refused: false
 - osd_recovery:

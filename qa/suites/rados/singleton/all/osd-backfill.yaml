@@ -22,5 +22,6 @@ tasks:
       - (OBJECT_
     conf:
       osd:
-        osd min pg log entries: 5
+        osd min pg log entries: 1
+        osd max pg log entries: 2
 - osd_backfill:
