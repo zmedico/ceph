@@ -241,10 +241,15 @@ def build_ceph_cluster(ctx, config):
         mds_nodes = " ".join(mds_nodes)
         mon_node = get_nodes_using_role(ctx, 'mon')
         mon_nodes = " ".join(mon_node)
-        mgr_nodes = get_nodes_using_role(ctx, 'mgr')
-        mgr_nodes = " ".join(mgr_nodes)
+        # skip mgr based on config item
+        # this is needed when test uses latest code to install old ceph versions
+        skip_mgr = config.get('skip-mgr', False)
+        if not skip_mgr:
+            mgr_nodes = get_nodes_using_role(ctx, 'mgr')
+            mgr_nodes = " ".join(mgr_nodes)
         new_mon = './ceph-deploy new' + " " + mon_nodes
-        mgr_create = './ceph-deploy mgr create' + " " + mgr_nodes
+        if not skip_mgr:
+            mgr_create = './ceph-deploy mgr create' + " " + mgr_nodes
         mon_hostname = mon_nodes.split(' ')[0]
         mon_hostname = str(mon_hostname)
         gather_keys = './ceph-deploy gatherkeys' + " " + mon_hostname
@@ -297,7 +302,8 @@ def build_ceph_cluster(ctx, config):
         # are taking way more than a minute/monitor to form quorum, so lets
         # try the next block which will wait up to 15 minutes to gatherkeys.
         execute_ceph_deploy(mon_create_nodes)
-        execute_ceph_deploy(mgr_create)
+        if not skip_mgr:
+            execute_ceph_deploy(mgr_create)
 
         # create-keys is explicit now
         # http://tracker.ceph.com/issues/16036
@@ -698,6 +704,8 @@ def task(ctx, config):
              bluestore: True
              # or
              filestore: True
+             # skip install of mgr for old release using below flag
+             skip-mgr: True  ( default is False )
 
         tasks:
         - install:
