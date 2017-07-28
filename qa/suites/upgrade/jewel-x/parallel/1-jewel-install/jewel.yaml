@@ -5,7 +5,7 @@ meta:
    upgrade the client node
 tasks:
 - install:
-    branch: jewel
+    branch: wip-dup-ops-jewel-deb
 - print: "**** done installing jewel"
 - ceph:
 - print: "**** done ceph"

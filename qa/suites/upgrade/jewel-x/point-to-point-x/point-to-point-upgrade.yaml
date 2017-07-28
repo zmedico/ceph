@@ -54,11 +54,13 @@ tasks:
 - install.upgrade:
     mon.a:
       # this has to change to v10.2.8 for the next point release 
-      tag: v10.2.7
+      #tag: v10.2.7
+      branch: wip-dup-ops-jewel-deb
       exclude_packages: ['ceph-mgr']
     mon.b:
       # this has to change to v10.2.8 for the next point release
-      tag: v10.2.7
+      #tag: v10.2.7
+      branch: wip-dup-ops-jewel-deb
       exclude_packages: ['ceph-mgr']
     # Note that client.a IS NOT upgraded at this point
     #client.1:
@@ -70,7 +72,8 @@ tasks:
 - install.upgrade:
     client.1:
       # this has to change to v10.2.8 for the next point release 
-      tag: v10.2.7
+      #tag: v10.2.7
+      branch: wip-dup-ops-jewel-deb
       exclude_packages: ['ceph-mgr']
 - print: "**** done branch: jewel v10.2.7 install.upgrade on client.1"
 - install.upgrade:
@@ -101,7 +104,7 @@ workload:
 workload_jewel:
    full_sequential:
    - workunit:
-       branch: jewel
+       branch: wip-dup-ops-jewel-deb
        clients:
          client.1:
          - rados/test.sh

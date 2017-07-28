@@ -2,7 +2,7 @@ meta:
 - desc: install ceph/jewel latest
 tasks:
 - install:
-    branch: jewel
+    branch: wip-dup-ops-jewel-deb
 - print: "**** done install jewel"
 - ceph:
 - print: "**** done ceph"
