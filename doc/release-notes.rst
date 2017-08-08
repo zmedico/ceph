@@ -2,16 +2,12 @@
  Release Notes
 ===============
 
-v12.1.2 Luminous (RC)
-=====================
+v12.2.0 Luminous
+================
 
-This is the third release candidate for Luminous, the next long term stable
-release.
-
-Ceph Luminous (v12.2.0) will be the foundation for the next long-term
-stable release series.  There have been major changes since Kraken
-(v11.2.z) and Jewel (v10.2.z), and the upgrade process is non-trivial.
-Please read these release notes carefully.
+This is the first release of Luminous, the current long term stable release.
+There have been major changes since Kraken (v11.2.z) and Jewel (v10.2.z), and
+the upgrade process is non-trivial. Please read these release notes carefully.
 
 Major Changes from Kraken
 -------------------------
@@ -33,7 +29,7 @@ Major Changes from Kraken
       :doc:`/rados/configuration/storage-devices` and
       :doc:`/rados/configuration/bluestore-config-ref`.
     - BlueStore supports `full data and metadata checksums
-      <../rados/configuration/bluestore-config-ref/#checksums`_ of all
+      <../rados/configuration/bluestore-config-ref/#checksums>`_ of all
       data stored by Ceph.
     - BlueStore supports `inline compression
       <../rados/configuration/bluestore-config-ref/#inline-compression>`_ using
@@ -46,17 +42,24 @@ Major Changes from Kraken
     allowing them to be used with RBD and CephFS.
 
   * *ceph-mgr*:
-
-    - There is a new daemon, *ceph-mgr*, which is a required part of any
-      Ceph deployment.  Although IO can continue when *ceph-mgr* is
-      down, metrics will not refresh and some metrics-related calls
-      (e.g., ``ceph df``) may block.  We recommend deploying several instances of
-      *ceph-mgr* for reliability.  See the notes on `Upgrading`_ below.
+    - There is a new daemon, *ceph-mgr*, which is a required part of
+      any Ceph deployment.  Although IO can continue when *ceph-mgr*
+      is down, metrics will not refresh and some metrics-related calls
+      (e.g., ``ceph df``) may block.  We recommend deploying several
+      instances of *ceph-mgr* for reliability.  See the notes on
+      `Upgrading`_ below.
     - The *ceph-mgr* daemon includes a `REST-based management API
-      <../mgr/restful>`_. The API is still experimental and somewhat limited but
-      will form the basis for API-based management of Ceph going forward.
-    - *ceph-mgr* also includes a `Prometheus exporter <../mgr/prometheus>`_
-       plugin, which can provide Ceph perfcounters to Prometheus.
+      <../mgr/restful>`_. The API is still experimental and somewhat
+      limited but will form the basis for API-based management of Ceph
+      going forward.
+    - *ceph-mgr* also includes a `Prometheus exporter
+      <../mgr/prometheus>`_ plugin, which can provide Ceph
+      perfcounters to Prometheus.
+    - ceph-mgr now has a `Zabbix <../mgr/zabbix>`_ plugin. Using
+      zabbix_sender it sends trapper events to a Zabbix server
+      containing high-level information of the Ceph cluster. This
+      makes it easy to monitor a Ceph cluster's status and send out
+      notifications in case of a malfunction.
 
   * The overall *scalability* of the cluster has improved. We have
     successfully tested clusters with up to 10,000 OSDs.
@@ -92,6 +95,30 @@ Major Changes from Kraken
     ``osd_snap_trim_sleep``, and ``osd_scrub_sleep`` have been
     reimplemented to work efficiently.  (These are used in some cases
     to work around issues throttling background work.)
+  * The crush ``choose_args`` encoding has been changed to make it
+    architecture-independent.
+  * Pools are now expected to be associated with the application using them.
+    Upon completing the upgrade to Luminous, the cluster will attempt to associate
+    existing pools to known applications (i.e. CephFS, RBD, and RGW). In-use pools
+    that are not associated to an application will generate a health warning. Any
+    unassociated pools can be manually associated using the new
+    ``ceph osd pool application enable`` command. For more details see
+    `associate pool to application <../rados/operations/pools/#associate-pool-to-application>`_
+    in the documentation.
+  * Added new commands ``pg force-recovery`` and ``pg-force-backfill``. Use them to
+    boost recovery or backfill priority of specified pgs, so they're
+    recovered/backfilled before any other. Note that these commands don't
+    interrupt ongoing recovery/backfill, but merely queue specified pgs before
+    others so they're recovered/backfilled as soon as possible. New commands ``pg
+    cancel-force-recovery`` and ``pg cancel-force-backfill`` restore default
+    recovery/backfill priority of previously forced pgs.
+
+- *ceph-mon*:
+
+  * Added new configuration "public bind addr" to support dynamic
+    environments like Kubernetes. When set the Ceph MON daemon could
+    bind locally to an IP address and advertise a different IP address
+    ``public addr`` on the network.
 
 - *RGW*:
 
@@ -110,13 +137,18 @@ Major Changes from Kraken
     encryption (only recommended for test setups), customer provided
     keys similar to Amazon SSE-C specification, and through the use of
     an external key management service (Openstack Barbican) similar
-    to Amazon SSE-KMS specification.
+    to Amazon SSE-KMS specification. :doc:`radosgw/encryption`
   * RGW now has preliminary AWS-like bucket policy API support.  For
     now, policy is a means to express a range of new authorization
     concepts.  In the future it will be the foundation for additional
-    auth capabilities such as STS and group policy.
+    auth capabilities such as STS and group policy. :doc:`radosgw/bucketpolicy`
   * RGW has consolidated the several metadata index pools via the use of rados
-    namespaces.
+    namespaces. :doc:`/radosgw/pools`
+  * S3 Object Tagging API has been added; while APIs are
+    supported for GET/PUT/DELETE object tags and in PUT object
+    API, there is no support for tags on Policies & Lifecycle yet
+  * RGW multisite now supports for enabling or disabling sync at a
+    bucket level.
 
 - *RBD*:
 
@@ -144,6 +176,10 @@ Major Changes from Kraken
   * rbd CLI ``import`` and ``copy`` commands now detect sparse and
     preserve sparse regions.
   * Images and Snapshots will now include a creation timestamp.
+  * Specifying user authorization capabilities for RBD clients has been
+    simplified. The general syntax for using RBD capability profiles is
+    "mon 'profile rbd' osd 'profile rbd[-read-only][ pool={pool-name}[, ...]]'".
+    For more details see "User Management" in the documentation.
 
 - *CephFS*:
 
@@ -160,6 +196,11 @@ Major Changes from Kraken
   * Client keys can now be created using the new ``ceph fs authorize`` command
     to create keys with access to the given CephFS file system and all of its
     data pools.
+  * The 'apply' mode of cephfs-journal-tool has been removed
+  * When running 'df' on a CephFS filesystem comprising exactly one data pool,
+    the result now reflects the file storage space used and available in that
+    data pool (fuse client only).
+
 
 - *Miscellaneous*:
 
@@ -172,6 +213,19 @@ Major Changes from Kraken
     - Debian 9 Stretch (x86_64)
     - Ubuntu 16.04 Xenial (x86_64 and aarch64)
     - Ubuntu 14.04 Trusty (x86_64)
+
+  * A first release of Ceph for FreeBSD is available which contains a full set
+    of features, other than Bluestore. It will run everything needed to build a
+    storage cluster. For clients, all access methods are available, albeit
+    CephFS is only accessible through a Fuse implementation. RBD images can be
+    mounted on FreeBSD systems through rbd-ggate
+
+    Ceph versions are released through the regular FreeBSD ports and packages
+    system. The most current version is available as: net/ceph-devel. Once
+    Luminous goes into official release, this version will be available as
+    net/ceph. Future development releases will be available via net/ceph-devel
+
+    More details about this port are in: `README.FreeBSD <https://github.com/ceph/ceph/blob/master/README.FreeBSD>`_
 
   * *CLI changes*:
 
@@ -238,6 +292,7 @@ Major Changes from Kraken
       contents.  (The existing ``ceph config-key list`` only dumps the key
       names, not the values.)
     - ``ceph config-key list`` is deprecated in favor of ``ceph config-key ls``.
+    - ``ceph config-key put`` is deprecated in favor of ``ceph config-key set``.
     - ``ceph auth list`` is deprecated in favor of ``ceph auth ls``.
     - ``ceph osd crush rule list`` is deprecated in favor of ``ceph osd crush rule ls``.
     - ``ceph osd set-{full,nearfull,backfillfull}-ratio`` sets the
@@ -265,6 +320,26 @@ Major Changes from Kraken
     - ``ceph tell <daemon> help`` will now return a usage summary.
     - ``ceph fs authorize`` creates a new client key with caps automatically
       set to access the given CephFS file system.
+    - The ``ceph health`` structured output (JSON or XML) no longer contains
+      'timechecks' section describing the time sync status.  This
+      information is now available via the 'ceph time-sync-status'
+      command.
+    - Certain extra fields in the ``ceph health`` structured output that
+      used to appear if the mons were low on disk space (which duplicated
+      the information in the normal health warning messages) are now gone.
+    - The ``ceph -w`` output no longer contains audit log entries by default.
+      Add a ``--watch-channel=audit`` or ``--watch-channel=*`` to see them.
+    - New "ceph -w" behavior - the "ceph -w" output no longer contains
+      I/O rates, available space, pg info, etc. because these are no
+      longer logged to the central log (which is what ``ceph -w``
+      shows). The same information can be obtained by running ``ceph pg
+      stat``; alternatively, I/O rates per pool can be determined using
+      ``ceph osd pool stats``. Although these commands do not
+      self-update like ``ceph -w`` did, they do have the ability to
+      return formatted output by providing a ``--format=<format>``
+      option.
+
+
 
 Major Changes from Jewel
 ------------------------
@@ -300,6 +375,7 @@ Major Changes from Jewel
     implementation.
   * Support for NFS version 3 has been added to the RGW NFS gateway.
   * A Python binding has been created for librgw.
+
 
 - *RBD*:
 
@@ -436,7 +512,7 @@ Upgrade compatibility notes, Kraken to Luminous
   been replaced by ``osd pool erasure code stripe unit``, and given
   the ability to be overridden by the erasure code profile setting
   ``stripe_unit``. For more details see
-  :doc:`/rados/operations/erasure-code/#erasure-code-profiles`.
+  :doc:`/rados/operations/erasure-code#erasure-code-profiles`.
 
 * rbd and cephfs can use erasure coding with bluestore. This may be
   enabled by setting ``allow_ec_overwrites`` to ``true`` for a pool. Since
@@ -529,6 +605,11 @@ Upgrade compatibility notes, Kraken to Luminous
 
 * The "journaler allow split entries" config setting has been removed.
 
+* The 'mon_warn_osd_usage_min_max_delta' config option has been
+  removed and the associated health warning has been disabled because
+  it does not address clusters undergoing recovery or CRUSH rules that do
+  not target all devices in the cluster.
+
 - *librados*:
 
   * Some variants of the omap_get_keys and omap_get_vals librados
@@ -589,106 +670,6 @@ Upgrade compatibility notes, Kraken to Luminous
   * The "ceph mds tell ..." command has been removed.  It is superceded
     by "ceph tell mds.<id> ..."
 
-
-Notable Changes since v12.1.1 (RC1)
------------------------------------
-
-* choose_args encoding has been changed to make it architecture-independent.
-  If you deployed Luminous dev releases or 12.1.0 rc release and made use of
-  the CRUSH choose_args feature, you need to remove all choose_args mappings
-  from your CRUSH map before starting the upgrade.
-
-* The 'ceph health' structured output (JSON or XML) no longer contains
-  a 'timechecks' section describing the time sync status.  This
-  information is now available via the 'ceph time-sync-status'
-  command.
-
-* Certain extra fields in the 'ceph health' structured output that
-  used to appear if the mons were low on disk space (which duplicated
-  the information in the normal health warning messages) are now gone.
-
-* The "ceph -w" output no longer contains audit log entries by default.
-  Add a "--watch-channel=audit" or "--watch-channel=*" to see them.
-
-* The 'apply' mode of cephfs-journal-tool has been removed
-
-* Added new configuration "public bind addr" to support dynamic environments
-  like Kubernetes. When set the Ceph MON daemon could bind locally to an IP
-  address and advertise a different IP address "public addr" on the network.
-
-* New "ceph -w" behavior - the "ceph -w" output no longer contains I/O rates,
-  available space, pg info, etc. because these are no longer logged to the
-  central log (which is what "ceph -w" shows). The same information can be
-  obtained by running "ceph pg stat"; alternatively, I/O rates per pool can
-  be determined using "ceph osd pool stats". Although these commands do not
-  self-update like "ceph -w" did, they do have the ability to return formatted
-  output by providing a "--format=<format>" option.
-
-* Pools are now expected to be associated with the application using them.
-  Upon completing the upgrade to Luminous, the cluster will attempt to associate
-  existing pools to known applications (i.e. CephFS, RBD, and RGW). In-use pools
-  that are not associated to an application will generate a health warning. Any
-  unassociated pools can be manually associated using the new
-  "ceph osd pool application enable" command. For more details see
-  "Associate Pool to Application" in the documentation.
-
-* ceph-mgr now has a Zabbix plugin. Using zabbix_sender it sends trapper
-  events to a Zabbix server containing high-level information of the Ceph
-  cluster. This makes it easy to monitor a Ceph cluster's status and send
-  out notifications in case of a malfunction.
-
-* The 'mon_warn_osd_usage_min_max_delta' config option has been
-  removed and the associated health warning has been disabled because
-  it does not address clusters undergoing recovery or CRUSH rules that do
-  not target all devices in the cluster.
-
-* Specifying user authorization capabilities for RBD clients has been
-  simplified. The general syntax for using RBD capability profiles is
-  "mon 'profile rbd' osd 'profile rbd[-read-only][ pool={pool-name}[, ...]]'".
-  For more details see "User Management" in the documentation.
-
-* ``ceph config-key put`` has been deprecated in favor of ``ceph config-key set``.
-
-
-Notable Changes since v12.1.1 (RC2)
------------------------------------
-
-* New "ceph -w" behavior - the "ceph -w" output no longer contains I/O rates,
-  available space, pg info, etc. because these are no longer logged to the
-  central log (which is what "ceph -w" shows). The same information can be
-  obtained by running "ceph pg stat"; alternatively, I/O rates per pool can
-  be determined using "ceph osd pool stats". Although these commands do not
-  self-update like "ceph -w" did, they do have the ability to return formatted
-  output by providing a "--format=<format>" option.
-
-* Pools are now expected to be associated with the application using them.
-  Upon completing the upgrade to Luminous, the cluster will attempt to associate
-  existing pools to known applications (i.e. CephFS, RBD, and RGW). In-use pools
-  that are not associated to an application will generate a health warning. Any
-  unassociated pools can be manually associated using the new
-  "ceph osd pool application enable" command. For more details see
-  "Associate Pool to Application" in the documentation.
-
-* ceph-mgr now has a Zabbix plugin. Using zabbix_sender it sends trapper
-  events to a Zabbix server containing high-level information of the Ceph
-  cluster. This makes it easy to monitor a Ceph cluster's status and send
-  out notifications in case of a malfunction.
-
-* The 'mon_warn_osd_usage_min_max_delta' config option has been
-  removed and the associated health warning has been disabled because
-  it does not address clusters undergoing recovery or CRUSH rules that do
-  not target all devices in the cluster.
-
-* Specifying user authorization capabilities for RBD clients has been
-  simplified. The general syntax for using RBD capability profiles is
-  "mon 'profile rbd' osd 'profile rbd[-read-only][ pool={pool-name}[, ...]]'".
-  For more details see "User Management" in the documentation.
-
-* RGW: bucket index resharding now uses the reshard  namespace in log pool
-  upgrade scenarios as well this is a changed behaviour from RC1 where a
-  new pool for reshard was created
-
-* RGW multisite now supports for enabling or disabling sync at a bucket level.
 
 Other Notable Changes
 ---------------------
