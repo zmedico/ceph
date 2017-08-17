@@ -88,7 +88,7 @@ about Ceph, see our `Architecture`_ section.
 .. _Architecture: architecture
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
    :hidden:
 
    start/intro
