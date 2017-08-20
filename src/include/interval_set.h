@@ -435,9 +435,19 @@ class interval_set {
 
 
   void subtract(const interval_set &a) {
-    for (typename std::map<T,T>::const_iterator p = a.m.begin();
-         p != a.m.end();
-         p++)
+    typename decltype(m)::const_iterator p, end;
+    interval_set i;
+
+    if (a.size() > size()) {
+      i.intersection_of(*this, a);
+      p = i.m.begin();
+      end = i.m.end();
+    } else {
+      p = a.m.begin();
+      end = a.m.end();
+    }
+
+    for (; p != end; p++)
       erase(p->first, p->second);
   }
 
