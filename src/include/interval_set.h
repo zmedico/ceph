@@ -22,13 +22,6 @@
 
 #include "encoding.h"
 
-#ifndef MIN
-# define MIN(a,b)  ((a)<=(b) ? (a):(b))
-#endif
-#ifndef MAX
-# define MAX(a,b)  ((a)>=(b) ? (a):(b))
-#endif
-
 
 template<typename T>
 class interval_set {
@@ -461,23 +454,43 @@ class interval_set {
     assert(&b != this);
     clear();
 
-    typename std::map<T,T>::const_iterator pa = a.m.begin();
-    typename std::map<T,T>::const_iterator pb = b.m.begin();
-    
-    while (pa != a.m.end() && pb != b.m.end()) {
-      // passing?
-      if (pa->first + pa->second <= pb->first) 
-        { pa++;  continue; }
-      if (pb->first + pb->second <= pa->first) 
-        { pb++;  continue; }
-      T start = MAX(pa->first, pb->first);
-      T en = MIN(pa->first+pa->second, pb->first+pb->second);
-      assert(en > start);
-      insert(start, en-start);
-      if (pa->first+pa->second > pb->first+pb->second)
-        pb++;
-      else
-        pa++; 
+    const interval_set *s, *l;
+    typename decltype(m)::const_iterator ps, pl;
+
+    if (a.size() < b.size()) {
+      ps = a.m.begin();
+      s = &a;
+      l = &b;
+    } else {
+      ps = b.m.begin();
+      s = &b;
+      l = &a;
+    }
+
+    if (ps != s->m.end()) {
+      T offset = ps->first;
+      while(1) {
+        pl = l->find_inc(offset);
+        if (pl == l->m.end())
+          break;
+        while (ps != s->m.end() && ps->first + ps->second <= pl->first)
+          ps++;
+        if (ps == s->m.end())
+          break;
+        if (pl->first + pl->second <= ps->first)
+          { offset = ps->first; continue; }
+        T start = std::max(ps->first, pl->first);
+        T en = std::min(ps->first + ps->second, pl->first + pl->second);
+        assert (en > start);
+        insert(start, en - start);
+        offset = pl->first + pl->second;
+        if (ps->first + ps->second <= offset) {
+          ps++;
+          if (ps == s->m.end())
+            break;
+          offset = ps->first;
+        }
+      }
     }
   }
   void intersection_of(const interval_set& b) {
