@@ -165,8 +165,9 @@ void PGPool::update(OSDMapRef map)
     interval_set<snapid_t> intersection;
     intersection.intersection_of(newly_removed_snaps, cached_removed_snaps);
     if (intersection == cached_removed_snaps) {
-        newly_removed_snaps.subtract(cached_removed_snaps);
-        cached_removed_snaps.union_of(newly_removed_snaps);
+        cached_removed_snaps.swap(newly_removed_snaps);
+        newly_removed_snaps = cached_removed_snaps;
+        newly_removed_snaps.subtract(intersection);
     } else {
         lgeneric_subdout(g_ceph_context, osd, 0) << __func__
           << " cached_removed_snaps shrank from " << cached_removed_snaps
