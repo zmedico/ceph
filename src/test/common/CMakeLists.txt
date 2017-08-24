@@ -202,6 +202,20 @@ add_executable(unittest_interval_set
 add_ceph_unittest(unittest_interval_set ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest_interval_set)
 target_link_libraries(unittest_interval_set global)
 
+# unittest_cell_interval_set
+add_executable(unittest_cell_interval_set
+  test_cell_interval_set.cc
+)
+add_ceph_unittest(unittest_cell_interval_set ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest_cell_interval_set)
+target_link_libraries(unittest_cell_interval_set global)
+
+# unittest_array_interval_set
+add_executable(unittest_array_interval_set
+  test_array_interval_set.cc
+)
+add_ceph_unittest(unittest_array_interval_set ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest_array_interval_set)
+target_link_libraries(unittest_array_interval_set global)
+
 # unittest_weighted_priority_queue
 add_executable(unittest_weighted_priority_queue
   test_weighted_priority_queue.cc
