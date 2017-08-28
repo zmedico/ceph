@@ -238,9 +238,9 @@ void PGPool::update(OSDMapRef map)
       (pi->get_snap_epoch() == map->get_epoch())) {
     updated = true;
     pi->build_removed_snaps(newly_removed_snaps);
-    interval_set<snapid_t> intersection;
-    intersection.intersection_of(newly_removed_snaps, cached_removed_snaps);
-    if (intersection == cached_removed_snaps) {
+    std::vector<std::pair<snapid_t,snapid_t>> intersection;
+    newly_removed_snaps.intersection_to_vector(cached_removed_snaps, intersection);
+    if (cached_removed_snaps.equals(intersection)) {
         cached_removed_snaps.swap(newly_removed_snaps);
         newly_removed_snaps = cached_removed_snaps;
         newly_removed_snaps.subtract(intersection);
