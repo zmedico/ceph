@@ -202,6 +202,13 @@ add_executable(unittest_interval_set
 add_ceph_unittest(unittest_interval_set ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest_interval_set)
 target_link_libraries(unittest_interval_set global)
 
+# unittest_interval_set_intersection_to_vector
+add_executable(unittest_interval_set_intersection_to_vector
+  test_interval_set_intersection_to_vector.cc
+)
+add_ceph_unittest(unittest_interval_set_intersection_to_vector ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/unittest_interval_set_intersection_to_vector)
+target_link_libraries(unittest_interval_set_intersection_to_vector global)
+
 # unittest_weighted_priority_queue
 add_executable(unittest_weighted_priority_queue
   test_weighted_priority_queue.cc
