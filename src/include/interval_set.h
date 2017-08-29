@@ -568,11 +568,11 @@ class interval_set {
     other = std::move(m);
   }
 
-  bool equals(const std::vector<std::pair<T,T>>& other) const {
+  bool equals(const std::vector<std::pair<const T,T>>& other) const {
     if (m.size() != other.size())
       return false;
 
-    typename std::vector<std::pair<T,T>>::const_iterator po = other.begin();
+    typename std::vector<std::pair<const T,T>>::const_iterator po = other.begin();
     for (typename decltype(m)::const_iterator pm = m.begin();
         pm != m.end();
         ++pm) {
@@ -583,23 +583,46 @@ class interval_set {
     return true;
   }
 
-  void subtract(const std::vector<std::pair<T,T>> &a) {
-    for (typename std::vector<std::pair<T,T>>::const_iterator p = a.begin();
+  void insert(const std::vector<std::pair<const T,T>> &a) {
+    typename decltype(m)::iterator mi = m.begin();
+    for (typename std::vector<std::pair<const T,T>>::const_iterator p = a.begin();
+         p != a.end();
+         ++p) {
+      mi = m.insert(mi, *p);
+      _size += p->second;
+    }
+  }
+
+  typename interval_set<T>::iterator insert(const interval_set<T>::iterator &mi,
+        const std::pair<const T,T> &i) {
+    _size += i.second;
+    return typename interval_set<T>::iterator(m.insert(mi._iter, i));
+  }
+
+  void copy(std::function<void(std::pair<const T,T>)> consumer) const {
+    for (typename decltype(m)::const_iterator p = m.begin();
+         p != m.end();
+         ++p)
+      consumer(*p);
+  }
+
+  void subtract(const std::vector<std::pair<const T,T>> &a) {
+    for (typename std::vector<std::pair<const T,T>>::const_iterator p = a.begin();
          p != a.end();
          ++p)
       erase(p->first, p->second);
   }
 
-  void intersection_to_vector(const interval_set &a,
-      std::vector<std::pair<T,T>> &result) const {
+  void intersection_to_vector(const std::vector<std::pair<const T,T>> &a,
+      std::vector<std::pair<const T,T>> &result) const {
     result.clear();
-    result.reserve(std::max(a.m.size(), m.size()));
+    result.reserve(std::max(a.size(), m.size()));
 
     const interval_set &b = *this;
-    typename decltype(m)::const_iterator pa = a.m.begin();
+    typename std::vector<std::pair<const T,T>>::const_iterator pa = a.begin();
     typename decltype(m)::const_iterator pb = b.m.begin();
 
-    while (pa != a.m.end() && pb != b.m.end()) {
+    while (pa != a.end() && pb != b.m.end()) {
       // passing?
       if (pa->first + pa->second <= pb->first)
         { ++pa;  continue; }
@@ -611,14 +634,15 @@ class interval_set {
           result.push_back(*pa);
           ++pa;
           ++pb;
-        } while (pa != a.m.end() && pb != b.m.end() && *pa == *pb);
+        } while (pa != a.end() && pb != b.m.end() && *pa == *pb);
         continue;
       }
 
       T start = std::max<T>(pa->first, pb->first);
       T en = std::min<T>(pa->first+pa->second, pb->first+pb->second);
       assert(en > start);
-      result.push_back(std::move(std::make_pair(start, en - start)));
+      std::pair<const T,T> p{start, en - start};
+      result.push_back(std::move(p));
       if (pa->first+pa->second > pb->first+pb->second)
         ++pb;
       else
