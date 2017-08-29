@@ -1553,6 +1553,7 @@ public:
    * explicit removed_snaps set.
    */
   void build_removed_snaps(interval_set<snapid_t>& rs) const;
+  void build_removed_snaps(std::function<void(const std::pair<const snapid_t,snapid_t>)> &rs) const;
   snapid_t snap_exists(const char *s) const;
   void add_snap(const char *n, utime_t stamp);
   void add_unmanaged_snap(uint64_t& snapid);
