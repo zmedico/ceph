@@ -1265,13 +1265,23 @@ bool pg_pool_t::is_removed_snap(snapid_t s) const
  */
 void pg_pool_t::build_removed_snaps(interval_set<snapid_t>& rs) const
 {
+  rs.clear();
+  interval_set<snapid_t>::iterator rsi = rs.begin();
+  std::function<void(const std::pair<const snapid_t,snapid_t>)> consumer =
+      [&](const std::pair<const snapid_t,snapid_t> &i){ rsi = rs.insert(rsi, i); };
+  build_removed_snaps(consumer);
+}
+
+void pg_pool_t::build_removed_snaps(std::function<void(const std::pair<const snapid_t,snapid_t>)> &rs) const
+{
   if (is_pool_snaps_mode()) {
-    rs.clear();
     for (snapid_t s = 1; s <= get_snap_seq(); s = s + 1)
-      if (snaps.count(s) == 0)
-	rs.insert(s);
+      if (snaps.count(s) == 0) {
+        std::pair<const snapid_t,snapid_t> sp{s, 1};
+        rs(sp);
+      }
   } else {
-    rs = removed_snaps;
+    removed_snaps.copy(rs);
   }
 }
 
