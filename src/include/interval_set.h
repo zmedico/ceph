@@ -553,6 +553,65 @@ class interval_set {
     }
   }
 
+  bool equals(const std::vector<std::pair<T,T>>& other) const {
+    if (m.size() != other.size())
+      return false;
+
+    typename std::vector<std::pair<T,T>>::const_iterator po = other.begin();
+    for (typename decltype(m)::const_iterator pm = m.begin();
+        pm != m.end();
+        ++pm) {
+      if (pm->first != po->first || pm->second != po->second)
+        return false;
+      ++po;
+    }
+    return true;
+  }
+
+  void subtract(const std::vector<std::pair<T,T>> &a) {
+    for (typename std::vector<std::pair<T,T>>::const_iterator p = a.begin();
+         p != a.end();
+         ++p)
+      erase(p->first, p->second);
+  }
+
+  void intersection_to_vector(const interval_set &a,
+      std::vector<std::pair<T,T>> &result) const {
+    result.clear();
+    result.reserve(std::max(a.m.size(), m.size()));
+
+    const interval_set &b = *this;
+    typename decltype(m)::const_iterator pa = a.m.begin();
+    typename decltype(m)::const_iterator pb = b.m.begin();
+
+    while (pa != a.m.end() && pb != b.m.end()) {
+      // passing?
+      if (pa->first + pa->second <= pb->first)
+        { ++pa;  continue; }
+      if (pb->first + pb->second <= pa->first)
+        { ++pb;  continue; }
+
+      if (*pa == *pb) {
+        do {
+          result.push_back(*pa);
+          ++pa;
+          ++pb;
+        } while (pa != a.m.end() && pb != b.m.end() && *pa == *pb);
+        continue;
+      }
+
+      T start = std::max<T>(pa->first, pb->first);
+      T en = std::min<T>(pa->first+pa->second, pb->first+pb->second);
+      assert(en > start);
+      result.push_back(std::move(std::make_pair(start, en - start)));
+      if (pa->first+pa->second > pb->first+pb->second)
+        ++pb;
+      else
+        ++pa;
+    }
+  }
+
+
 private:
   // data
   int64_t _size;
