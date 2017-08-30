@@ -158,8 +158,9 @@ void PGPool::update(OSDMapRef map)
   auid = pi->auid;
   name = map->get_pool_name(id);
   bool updated = false;
-  if ((map->get_epoch() != cached_epoch + 1) ||
-      (pi->get_snap_epoch() == map->get_epoch())) {
+  if (((map->get_epoch() != cached_epoch + 1) ||
+      (pi->get_snap_epoch() == map->get_epoch())) &&
+      pi->updated_removed_snaps(cached_removed_snaps)) {
     updated = true;
     std::vector<std::pair<const snapid_t,snapid_t>> removed_snaps, intersection;
     removed_snaps.reserve(cached_removed_snaps.size() << 1);

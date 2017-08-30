@@ -1285,6 +1285,14 @@ void pg_pool_t::build_removed_snaps(std::function<void(const std::pair<const sna
   }
 }
 
+bool pg_pool_t::updated_removed_snaps(const interval_set<snapid_t>& cached_removed_snaps) const
+{
+  if (is_unmanaged_snaps_mode() && // new removals cause range end to increase
+      removed_snaps.range_end() == cached_removed_snaps.range_end())
+    return false;
+  return true;
+}
+
 snapid_t pg_pool_t::snap_exists(const char *s) const
 {
   for (map<snapid_t,pool_snap_info_t>::const_iterator p = snaps.begin();
